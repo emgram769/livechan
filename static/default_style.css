@@ -1,0 +1,20 @@
+.livechan_chat_output {
+  background: #EEF2FF;
+}
+
+.livechan_chat_output_chat {
+  font-family: sans-serif;
+  background: #D6DAF0;
+  margin: 4px;
+  padding: 4px;
+}
+
+.livechan_chat_output_name {
+  font-weight: bold;
+  color: green;
+}
+
+.livechan_chat_input {
+  background: #98E;
+}
+

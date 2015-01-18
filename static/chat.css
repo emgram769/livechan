@@ -1,0 +1,66 @@
+
+.livechan_chat_input {
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  height: 50px;
+  left: 0;
+  right: 0;
+}
+
+.livechan_chat_input_name {
+  padding: 0;
+  margin: 0;
+  border: none;
+  position: absolute;
+  width: 146px;
+  left: 3px;
+  top: 3px;
+}
+
+.livechan_chat_input_file {
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  width: 146px;
+  left: 3px;
+  bottom: 3px;
+}
+
+.livechan_chat_input_message_div {
+  padding:0;
+  margin:0;
+  position: absolute;
+  right: 53px;
+  left: 153px;
+  top: 3px;
+  bottom: 3px;
+}
+
+.livechan_chat_input_message {
+  padding: 0;
+  margin: 0;
+  border:none;
+  height: 100%;
+  width: 100%;
+}
+
+.livechan_chat_input_submit {
+  position: absolute;
+  width: 47px;
+  top: 3px;
+  right: 2px;
+  bottom: 3px;
+}
+
+.livechan_chat_output {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 50px;
+  overflow: auto;
+}
+

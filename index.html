@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<title>livechan - beta</title>
+<link rel='stylesheet' type='text/css' href='static/chat.css'/>
+<link rel='stylesheet' type='text/css' href='static/default_style.css'/>
+<script type='text/javascript' src='/static/chat.js'></script>
+<script type='text/javascript' src='/static/main.js'></script>
+<script type='text/javascript'>
+
+/* Initialization functions called here. */
+window.addEventListener('load', function() {
+  createChat(document.getElementById('chat'), 'ws');
+  //createChat(document.getElementById('chat2'), 'ws');
+});
+
+</script>
+</head>
+<body>
+<div id='chat' style="position:absolute;left:0;right:0;top:0;bottom:0;"></div>
+</body>
+</html>
