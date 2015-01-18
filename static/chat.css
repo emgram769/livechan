@@ -69,3 +69,11 @@
 .livechan_chat_output_chat {
   max-height: 200px;
 }
+
+.livechan_chat_output_date {
+  margin: 0 4px;
+}
+
+.livechan_chat_output_count:hover {
+  cursor: pointer;
+}

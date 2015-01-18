@@ -5,6 +5,7 @@ import (
   "net/http"
   "time"
   "log"
+  "fmt"
 )
 
 const (
@@ -14,63 +15,59 @@ const (
   maxMessageSize = 512
 )
 
-type connection struct {
+type Connection struct {
   ws *websocket.Conn
   send chan []byte
   channelName string
   ipAddr string
 }
 
-type message struct {
+type Message struct {
   data []byte
-  conn *connection
+  conn *Connection
 }
 
-type hub struct {
-  channels map[string]map[*connection]time.Time
-  broadcast chan message
-  register chan *connection
-  unregister chan *connection
+type Hub struct {
+  channels map[string]map[*Connection]time.Time
+  broadcast chan Message
+  register chan *Connection
+  unregister chan *Connection
 }
 
-var h = hub {
-  broadcast: make(chan message),
-  register: make(chan *connection),
-  unregister: make(chan *connection),
-  channels: make(map[string]map[*connection]time.Time),
+var h = Hub {
+  broadcast: make(chan Message),
+  register: make(chan *Connection),
+  unregister: make(chan *Connection),
+  channels: make(map[string]map[*Connection]time.Time),
 }
 
-func canBroadcast(t time.Time) bool{
-  if (time.Now().Sub(t).Seconds() < 4) {
-    return false
-  }
-  return true
-}
-
-func (h *hub) run() {
+func (h *Hub) run() {
   for {
     select {
     case c := <-h.register:
       if (h.channels[c.channelName] == nil) {
-        h.channels[c.channelName] = make(map[*connection]time.Time)
+        h.channels[c.channelName] = make(map[*Connection]time.Time)
       }
       h.channels[c.channelName][c] = time.Unix(0,0)
+      c.send <- createJSONs(getChats(c.channelName))
     case c := <-h.unregister:
       if _, ok := h.channels[c.channelName][c]; ok {
         delete(h.channels[c.channelName], c)
         close(c.send)
       }
     case m := <-h.broadcast:
-      if (canBroadcast(h.channels[m.conn.channelName][m.conn])) {
-        h.channels[m.conn.channelName][m.conn] = time.Now()
+      var chat = createChat(m.data, m.conn);
+      fmt.Printf("%+v\n", chat);
+      if (canBroadcast(chat, m.conn)) {
         for c := range h.channels[m.conn.channelName] {
           select {
-          case c.send <- m.data:
+          case c.send <- createJSON(chat):
           default:
             close(c.send)
             delete(h.channels[m.conn.channelName], c)
           }
         }
+        insertChat(m.conn.channelName, *chat)
       }
     }
   }
@@ -81,7 +78,7 @@ var upgrader = websocket.Upgrader{
   WriteBufferSize: 1024,
 }
 
-func (c *connection) readPump() {
+func (c *Connection) readPump() {
   defer func() {
     h.unregister <- c
     c.ws.Close()
@@ -94,17 +91,17 @@ func (c *connection) readPump() {
     if err != nil {
       break
     }
-    m := message{data:d, conn:c}
+    m := Message{data:d, conn:c}
     h.broadcast <- m
   }
 }
 
-func (c *connection) write(mt int, payload []byte) error {
+func (c *Connection) write(mt int, payload []byte) error {
   c.ws.SetWriteDeadline(time.Now().Add(writeWait))
   return c.ws.WriteMessage(mt, payload)
 }
 
-func (c *connection) writePump() {
+func (c *Connection) writePump() {
   ticker := time.NewTicker(pingPeriod)
   defer func() {
     ticker.Stop()
@@ -112,12 +109,12 @@ func (c *connection) writePump() {
   }()
   for {
     select {
-    case message, ok := <-c.send:
+    case Message, ok := <-c.send:
       if !ok {
         c.write(websocket.CloseMessage, []byte{})
         return
       }
-      if err := c.write(websocket.TextMessage, message); err != nil {
+      if err := c.write(websocket.TextMessage, Message); err != nil {
         return
       }
     case <-ticker.C:
@@ -138,7 +135,7 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
     log.Println(err)
     return
   }
-  c := &connection{send: make(chan []byte, 256), ws: ws}
+  c := &Connection{send: make(chan []byte, 256), ws: ws}
   c.channelName = req.URL.Path[1:]
   c.ipAddr = req.RemoteAddr
   h.register <- c
