@@ -8,5 +8,9 @@ func getChats(channelName string) []Chat{
 
 func insertChat(channelName string, chat Chat) {
   db[channelName] = append(db[channelName], chat)
+  var channelLen = len(db[channelName])
+  if (channelLen > 50) {
+    db[channelName] = db[channelName][channelLen - 50:channelLen]
+  }
 }
 
