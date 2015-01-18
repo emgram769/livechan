@@ -134,6 +134,59 @@ function insertChat(outputElem, chat, number) {
   }
 }
 
+/* @brief Parses and returns a message div.
+ *
+ * @param data The message data to be parsed.
+ * @return A dom element containing the message.
+ */
+function parse(text, rules, end_tag) {
+  var output = document.createElement('div'); 
+  var position = 0;
+  var end_matched = false;
+  if (end_tag) {
+    var end_handler = function(m) {
+      end_matched = true;
+    }
+    rules = [[end_tag, end_handler]].concat(rules);
+  }
+  do {
+    var match = null;
+    var match_pos = text.length;
+    var handler = null;
+    for (var i = 0; i < rules.length; i++) {
+      rules[i][0].lastIndex = position;
+      var result = rules[i][0].exec(text);
+      if (result !== null && position <= result.index && result.index < match_pos) {
+        match = result;
+        match_pos = result.index;
+        handler = rules[i][1];
+      }
+    }
+    var unmatched_text = text.substring(position, match_pos);
+    output.appendChild(document.createTextNode(unmatched_text));
+    position = match_pos;
+    if (match !== null) {
+      position += match[0].length;
+      output.appendChild(handler(match));
+    }
+  } while (match !== null && !end_matched);
+  return output;
+}
+
+var messageRules = [
+  [/\r?\n/g, function(m) {
+    return document.createElement('br');
+  }],
+  [/^>.+/g, function(m) {
+    var out = document.createElement('span');
+    out.style.color = 'green';
+    out.appendChild(document.createTextNode(m));
+    return out;
+  }],
+  [/\[code\](.*)\[\/code\]/g, function(m) {
+  }]
+]
+
 /* @brief Generates a chat div.
  *
  * @param data Data passed in via websocket.
@@ -167,7 +220,7 @@ function generateChat(data) {
 
   /* TODO: actually do all the processing to make it a real message. */
   if (data.Message) {
-    message.appendChild(document.createTextNode(data.Message));
+    message.appendChild(parse(data.Message, messageRules));
   } else {
     message.appendChild(document.createTextNode(''));
   }

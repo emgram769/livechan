@@ -68,6 +68,7 @@
 
 .livechan_chat_output_chat {
   max-height: 200px;
+  overflow: hidden;
 }
 
 .livechan_chat_output_date {
