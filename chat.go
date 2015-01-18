@@ -43,8 +43,6 @@ func createChat(data []byte, conn *Connection) *Chat{
 
   c.Date = time.Now()
   c.IpAddr = conn.ipAddr
-  count = count + 1
-  c.Count = count
   return c
 }
 
@@ -89,6 +87,8 @@ func canBroadcast(chat *Chat, conn *Connection) bool{
     return false
   }
   h.channels[conn.channelName][conn] = time.Now()
+  count = count + 1
+  chat.Count = count
   return true
 }
 
