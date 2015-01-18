@@ -1,7 +1,7 @@
 /* @file chat.js
  * 
  * Include this file to spawn a livechan chat.
- * Use createChat(domElement, channel).
+ * Use Chat(domElement, channel).
  */
 
 /* @brief Creates a structure of html elements for the
@@ -118,22 +118,6 @@ function initWebSocket(channel, connection) {
   }
 }
 
-/* @brief Inserts the chat into the DOM, overwriting if need be.
- *
- * @param outputElem The dom element to insert the chat into.
- * @param chat The dom element to be inserted.
- * @param number The number of the chat to keep it in order.
- */
-function insertChat(outputElem, chat, number) {
-  var doScroll = Math.abs(outputElem.scrollTop
-                 + outputElem.clientHeight
-                 - outputElem.scrollHeight);
-  outputElem.appendChild(chat);
-  if (doScroll < 5) {
-    outputElem.scrollTop = outputElem.scrollHeight;
-  }
-}
-
 /* @brief Parses and returns a message div.
  *
  * @param data The message data to be parsed.
@@ -217,12 +201,121 @@ var messageRules = [
 
 ]
 
+/* @brief Sends the message in the form.
+ *
+ * @param inputElem The form itself.
+ * @param connection The websocket connection.
+ * @param event The event causing a message to be sent.
+ */
+function sendInput(inputElem, connection, event) {
+  if (inputElem.submit.disabled == false) {
+    connection.send({
+      message: inputElem.message.value,
+      name: inputElem.name.value
+    });
+    inputElem.message.value = '';
+    inputElem.submit.disabled = true;
+    var i = 4;
+    inputElem.submit.setAttribute('value', i);
+    var countDown = setInterval(function(){
+      inputElem.submit.setAttribute('value', --i);
+    }, 1000);
+    setTimeout(function(){
+      clearInterval(countDown);
+      inputElem.submit.disabled = false;
+      inputElem.submit.setAttribute('value', 'send');
+    }, i * 1000);
+    event.preventDefault();
+    return false;
+  }
+}
+
+/* @brief Creates a chat.
+ *
+ * @param domElem The element to populate with chat
+ *        output div and input form.
+ * @param channel The channel to bind the chat to.
+ */
+function Chat(domElem, channel) {
+  this.chatElems = buildChat(domElem);
+  this.connection = initWebSocket(channel);
+  this.initOutput();
+  this.initInput();
+}
+
+/* @brief Binds the form submission to websockets.
+ */
+Chat.prototype.initInput = function() {
+  var inputElem = this.chatElems.input;
+  var connection = this.connection;
+  inputElem.form.addEventListener('submit', function(event) {
+    sendInput(inputElem, connection, event);
+  });
+  
+  inputElem.message.addEventListener('keydown', function(event) {
+    /* If enter key. */
+    if (event.keyCode === 13 && !event.shiftKey) {
+      sendInput(inputElem, connection, event);
+    }
+  });
+}
+
+/* @brief Binds messages to be displayed to the output.
+ */
+Chat.prototype.initOutput = function() {
+  var outputElem = this.chatElems.output;
+  var connection = this.connection;
+  var self = this;
+  connection.onmessage(function(data) {
+    if( Object.prototype.toString.call(data) === '[object Array]' ) {
+      for (var i = 0; i < data.length; i++) {
+        self.insertChat(self.generateChat(data[i]), data[i].Count);
+      }
+    } else {
+      self.insertChat(self.generateChat(data), data.Count);
+    }
+  });
+  connection.onclose(function() {
+    connection.ws = null;
+    var getConnection = setInterval(function() {
+      console.log("Attempting to reconnect.");
+      if (initWebSocket(connection.channel, connection) !== null
+          && connection.ws !== null) {
+        console.log("Success!");
+        clearInterval(getConnection);
+      }
+    }, 4000);
+  });
+}
+
+/* @brief Inserts the chat into the DOM, overwriting if need be.
+ *
+ * @TODO: Actually scan and insert appropriately for varying numbers.
+ *
+ * @param outputElem The dom element to insert the chat into.
+ * @param chat The dom element to be inserted.
+ * @param number The number of the chat to keep it in order.
+ */
+Chat.prototype.insertChat = function(chat, number) {
+  if (!number) {
+    console.log("Error: invalid chat number.");
+  }
+  var outputElem = this.chatElems.output;
+  var doScroll = Math.abs(outputElem.scrollTop
+                 + outputElem.clientHeight
+                 - outputElem.scrollHeight);
+  outputElem.appendChild(chat);
+  if (doScroll < 5) {
+    outputElem.scrollTop = outputElem.scrollHeight;
+  }
+}
+
 /* @brief Generates a chat div.
  *
  * @param data Data passed in via websocket.
  * @return A dom element.
  */
-function generateChat(data) {
+Chat.prototype.generateChat = function(data) {
   var chat = document.createElement('div');
   chat.className = 'livechan_chat_output_chat';
 
@@ -264,10 +357,11 @@ function generateChat(data) {
   }
 
   if (data.Count) {
+    var self = this;
     count.setAttribute('id', 'livechan_chat_'+data.Count);
     count.appendChild(document.createTextNode(data.Count));
     count.addEventListener('click', function() {
-      console.log(data.Count);
+      //self.input.message.value += '>>'+data.Count+'\n';
     });
   }
 
@@ -280,94 +374,5 @@ function generateChat(data) {
   chat.appendChild(header);
   chat.appendChild(body);
   return chat;
-}
-
-/* @brief Binds messages to be displayed to the output.
- *
- * @param outputElem The DOM element to be populated
-          with messages.
- * @param connection The websocket connection.
- */
-function initOutput(outputElem, connection) {
-  connection.onmessage(function(data) {
-    if( Object.prototype.toString.call(data) === '[object Array]' ) {
-      for (var i = 0; i < data.length; i++) {
-        insertChat(outputElem, generateChat(data[i]));
-      }
-    } else {
-      insertChat(outputElem, generateChat(data));
-    }
-  });
-  connection.onclose(function() {
-    connection.ws = null;
-    var getConnection = setInterval(function() {
-      console.log("Attempting to reconnect.");
-      if (initWebSocket(connection.channel, connection) !== null
-          && connection.ws !== null) {
-        console.log("Success!");
-        clearInterval(getConnection);
-      }
-    }, 4000);
-  });
-}
-
-/* @brief Sends the message in the form.
- *
- * @param inputElem The form itself.
- * @param connection The websocket connection.
- * @param event The event causing a message to be sent.
- */
-function sendInput(inputElem, connection, event) {
-  if (inputElem.submit.disabled == false) {
-    connection.send({
-      message: inputElem.message.value,
-      name: inputElem.name.value
-    });
-    inputElem.message.value = '';
-    inputElem.submit.disabled = true;
-    var i = 4;
-    inputElem.submit.setAttribute('value', i);
-    var countDown = setInterval(function(){
-      inputElem.submit.setAttribute('value', --i);
-    }, 1000);
-    setTimeout(function(){
-      clearInterval(countDown);
-      inputElem.submit.disabled = false;
-      inputElem.submit.setAttribute('value', 'send');
-    }, i * 1000);
-    event.preventDefault();
-    return false;
-  }
-}
-
-/* @brief Binds the form submission to websockets.
- *
- * @param inputElem The form itself.
- * @param connection The websocket connection.
- */
-function initInput(inputElem, connection) {
-  inputElem.form.addEventListener('submit', function(event) {
-    sendInput(inputElem, connection, event);
-  });
-  
-  inputElem.message.addEventListener('keydown', function(event) {
-    /* If enter key. */
-    if (event.keyCode === 13 && !event.shiftKey) {
-      sendInput(inputElem, connection, event);
-    }
-  });
-}
-
-/* @brief Creates a chat.
- *
- * @param domElem The element to populate with chat
- *        output div and input form.
- * @param channel The channel to bind the chat to.
- */
-function createChat(domElem, channel) {
-  var chatElems = buildChat(domElem);
-  var connection = initWebSocket(channel);
-  initInput(chatElems.input, connection);
-  initOutput(chatElems.output, connection);
 }
 
