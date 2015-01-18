@@ -5,17 +5,18 @@
   position: absolute;
   width: 100%;
   bottom: 0;
-  height: 50px;
+  height: 43px;
   left: 0;
   right: 0;
 }
 
 .livechan_chat_input_name {
   padding: 0;
+  padding-left: 2px;
   margin: 0;
   border: none;
   position: absolute;
-  width: 146px;
+  width: 104px;
   left: 3px;
   top: 3px;
 }
@@ -24,9 +25,10 @@
   padding: 0;
   margin: 0;
   position: absolute;
-  width: 146px;
+  width: 106px;
   left: 3px;
   bottom: 3px;
+  border: none;
 }
 
 .livechan_chat_input_message_div {
@@ -34,7 +36,7 @@
   margin:0;
   position: absolute;
   right: 53px;
-  left: 153px;
+  left: 112px;
   top: 3px;
   bottom: 3px;
 }
@@ -51,8 +53,9 @@
   position: absolute;
   width: 47px;
   top: 3px;
-  right: 2px;
+  right: 3px;
   bottom: 3px;
+  border: none;
 }
 
 .livechan_chat_output {
@@ -64,3 +67,6 @@
   overflow: auto;
 }
 
+.livechan_chat_output_chat {
+  max-height: 200px;
+}

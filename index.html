@@ -10,13 +10,14 @@
 
 /* Initialization functions called here. */
 window.addEventListener('load', function() {
-  createChat(document.getElementById('chat'), 'ws');
-  //createChat(document.getElementById('chat2'), 'ws');
+  createChat(document.getElementById('chat'), 'chat1');
+  createChat(document.getElementById('chat2'), 'chat2');
 });
 
 </script>
 </head>
 <body>
-<div id='chat' style="position:absolute;left:0;right:0;top:0;bottom:0;"></div>
+<div id='chat' style="position:absolute;left:0;right:50.1%;top:0;bottom:0;"></div>
+<div id='chat2' style="position:absolute;left:50.1%;right:0;top:0;bottom:0;"></div>
 </body>
 </html>

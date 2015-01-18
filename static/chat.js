@@ -21,6 +21,7 @@ function buildChat(domElem) {
   
   var name = document.createElement('input');
   name.className = 'livechan_chat_input_name';
+  name.setAttribute('placeholder', 'Anonymous');
 
   var file = document.createElement('input');
   file.className = 'livechan_chat_input_file';
@@ -54,18 +55,22 @@ function buildChat(domElem) {
       form: input,
       message: message,
       name: name,
+      submit: submit,
       file: file
     }
   };
 }
 
-function Connection(ws) {
+function Connection(ws, channel) {
   this.ws = ws;
+  this.channel = channel;
 }
 
 Connection.prototype.send = function(obj) {
   /* Jsonify the object and send as string. */
-  this.ws.send(JSON.stringify(obj));
+  if (this.ws) {
+    this.ws.send(JSON.stringify(obj));
+  }
 }
 
 Connection.prototype.onmessage = function(callback) {
@@ -88,13 +93,26 @@ Connection.prototype.onclose = function(callback) {
  * @param channel The channel to open a connection to.
  * @return A connection the the websocket.
  */
-function initWebSocket(channel) {
+function initWebSocket(channel, connection) {
   var ws = null;
   if (window['WebSocket']) {
-    ws = new WebSocket('ws://'+location.host+'/'+channel);
+    try {
+      ws = new WebSocket('ws://'+location.host+'/ws/'+channel);
+    } catch(e) {
+      ws = null;
+    }
   }
   if (ws !== null) {
-    return new Connection(ws);
+    ws.onerror = function() {
+      connection.ws = null;
+    };
+    if (connection) {
+      console.log("reconnected.");
+      connection.ws = ws;
+      return connection;
+    } else {
+      return new Connection(ws, channel);
+    }
   } else {
     return null;
   }
@@ -107,9 +125,11 @@ function initWebSocket(channel) {
  * @param number The number of the chat to keep it in order.
  */
 function insertChat(outputElem, chat, number) {
-  var doScroll = outputElem.scrollTop + outputElem.clientHeight == outputElem.scrollHeight;
+  var doScroll = Math.abs(outputElem.scrollTop
+                 + outputElem.clientHeight
+                 - outputElem.scrollHeight);
   outputElem.appendChild(chat);
-  if (doScroll) {
+  if (doScroll < 5) {
     outputElem.scrollTop = outputElem.scrollHeight;
   }
 }
@@ -155,6 +175,46 @@ function initOutput(outputElem, connection) {
   connection.onmessage(function(data) {
     insertChat(outputElem, generateChat(data));
   });
+  connection.onclose(function() {
+    connection.ws = null;
+    var getConnection = setInterval(function() {
+      console.log("Attempting to reconnect.");
+      if (initWebSocket(connection.channel, connection) !== null
+          && connection.ws !== null) {
+        console.log("Success!");
+        clearInterval(getConnection);
+      }
+    }, 4000);
+  });
+}
+
+/* @brief Sends the message in the form.
+ *
+ * @param inputElem The form itself.
+ * @param connection The websocket connection.
+ * @param event The event causing a message to be sent.
+ */
+function sendInput(inputElem, connection, event) {
+  if (inputElem.submit.disabled == false) {
+    connection.send({
+      message: inputElem.message.value,
+      name: inputElem.name.value
+    });
+    inputElem.message.value = '';
+    inputElem.submit.disabled = true;
+    var i = 4;
+    inputElem.submit.setAttribute('value', i);
+    var countDown = setInterval(function(){
+      inputElem.submit.setAttribute('value', --i);
+    }, 1000);
+    setTimeout(function(){
+      clearInterval(countDown);
+      inputElem.submit.disabled = false;
+      inputElem.submit.setAttribute('value', 'send');
+    }, i * 1000);
+    event.preventDefault();
+    return false;
+  }
 }
 
 /* @brief Binds the form submission to websockets.
@@ -164,25 +224,13 @@ function initOutput(outputElem, connection) {
  */
 function initInput(inputElem, connection) {
   inputElem.form.addEventListener('submit', function(event) {
-    connection.send({
-      message: inputElem.message.value,
-      name: inputElem.name.value
-    });
-    event.preventDefault();
-    inputElem.message.value = '';
-    return false;
+    sendInput(inputElem, connection, event);
   });
   
   inputElem.message.addEventListener('keydown', function(event) {
     /* If enter key. */
     if (event.keyCode === 13 && !event.shiftKey) {
-      event.preventDefault();
-      connection.send({
-        message: inputElem.message.value,
-        name: inputElem.name.value
-      });
-      inputElem.message.value = '';
-      return false;
+      sendInput(inputElem, connection, event);
     }
   });
 }

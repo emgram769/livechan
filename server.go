@@ -14,37 +14,62 @@ const (
   maxMessageSize = 512
 )
 
+type connection struct {
+  ws *websocket.Conn
+  send chan []byte
+  channelName string
+  ipAddr string
+}
+
+type message struct {
+  data []byte
+  conn *connection
+}
+
 type hub struct {
-  connections map[*connection]bool
-  broadcast chan []byte
+  channels map[string]map[*connection]time.Time
+  broadcast chan message
   register chan *connection
   unregister chan *connection
 }
 
 var h = hub {
-  broadcast: make(chan []byte),
+  broadcast: make(chan message),
   register: make(chan *connection),
   unregister: make(chan *connection),
-  connections: make(map[*connection]bool),
+  channels: make(map[string]map[*connection]time.Time),
+}
+
+func canBroadcast(t time.Time) bool{
+  if (time.Now().Sub(t).Seconds() < 4) {
+    return false
+  }
+  return true
 }
 
 func (h *hub) run() {
   for {
     select {
     case c := <-h.register:
-      h.connections[c] = true
+      if (h.channels[c.channelName] == nil) {
+        h.channels[c.channelName] = make(map[*connection]time.Time)
+      }
+      h.channels[c.channelName][c] = time.Unix(0,0)
     case c := <-h.unregister:
-      if _, ok := h.connections[c]; ok {
-        delete(h.connections, c)
+      if _, ok := h.channels[c.channelName][c]; ok {
+        delete(h.channels[c.channelName], c)
         close(c.send)
       }
     case m := <-h.broadcast:
-      for c := range h.connections {
-        select {
-        case c.send <- m:
-        default:
-          close(c.send)
-          delete(h.connections, c)
+      if (canBroadcast(h.channels[m.conn.channelName][m.conn])) {
+        h.channels[m.conn.channelName][m.conn] = time.Now()
+        for c := range h.channels[m.conn.channelName] {
+          select {
+          case c.send <- m.data:
+          default:
+            close(c.send)
+            delete(h.channels[m.conn.channelName], c)
+          }
         }
       }
     }
@@ -56,11 +81,6 @@ var upgrader = websocket.Upgrader{
   WriteBufferSize: 1024,
 }
 
-type connection struct {
-  ws *websocket.Conn
-  send chan []byte
-}
-
 func (c *connection) readPump() {
   defer func() {
     h.unregister <- c
@@ -70,11 +90,12 @@ func (c *connection) readPump() {
   c.ws.SetReadDeadline(time.Now().Add(pongWait))
   c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
   for {
-    _, message, err := c.ws.ReadMessage()
+    _, d, err := c.ws.ReadMessage()
     if err != nil {
       break
     }
-    h.broadcast <- message
+    m := message{data:d, conn:c}
+    h.broadcast <- m
   }
 }
 
@@ -118,6 +139,8 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
     return
   }
   c := &connection{send: make(chan []byte, 256), ws: ws}
+  c.channelName = req.URL.Path[1:]
+  c.ipAddr = req.RemoteAddr
   h.register <- c
   go c.writePump()
   c.readPump()
@@ -125,6 +148,8 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
 
 func htmlServer(w http.ResponseWriter, req *http.Request) {
   if req.URL.Path != "/" {
+    http.Error(w, "Method not allowed", 405)
+    return
   }
   if req.Method != "GET" {
     http.Error(w, "Method not allowed", 405)
@@ -141,7 +166,7 @@ func staticServer(w http.ResponseWriter, req *http.Request) {
 func main() {
   go h.run()
   http.HandleFunc("/", htmlServer)
-  http.HandleFunc("/ws", wsServer)
+  http.HandleFunc("/ws/", wsServer)
   http.HandleFunc("/static/", staticServer)
   err := http.ListenAndServe(":8080", nil)
   if err != nil {
