@@ -1,12 +1,11 @@
 package main
 
 import (
-    "github.com/gorilla/websocket"
-    "net/http"
-    "time"
-    "log"
-    "text/template"
-    )
+  "github.com/gorilla/websocket"
+  "net/http"
+  "time"
+  "log"
+)
 
 const (
   writeWait = 10 * time.Second
@@ -132,11 +131,11 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
     return
   }
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
-  template.Must(template.ParseFiles("index.html")).Execute(w, req.Host)
+  http.ServeFile(w, req, "index.html")
 }
 
-func staticServer(w http.ResponseWriter, r *http.Request) {
-    http.ServeFile(w, r, r.URL.Path[1:])
+func staticServer(w http.ResponseWriter, req *http.Request) {
+    http.ServeFile(w, req, req.URL.Path[1:])
 }
 
 func main() {
