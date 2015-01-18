@@ -142,26 +142,59 @@ function insertChat(outputElem, chat, number) {
 function generateChat(data) {
   var chat = document.createElement('div');
   chat.className = 'livechan_chat_output_chat';
-  var name = document.createElement('div');
+
+  var header = document.createElement('div');
+  header.className = 'livechan_chat_output_header';
+  var name = document.createElement('span');
   name.className = 'livechan_chat_output_name';
+  var trip = document.createElement('span');
+  trip.className = 'livechan_chat_output_trip';
+  var date = document.createElement('span');
+  date.className = 'livechan_chat_output_date';
+  var count = document.createElement('span');
+  count.className = 'livechan_chat_output_count';
+
+  var body = document.createElement('div');
+  body.className = 'livechan_chat_output_body';
   var message = document.createElement('div');
   message.className = 'livechan_chat_output_message';
 
-  if (data.name) {
-    name.appendChild(document.createTextNode(data.name));
+  if (data.Name) {
+    name.appendChild(document.createTextNode(data.Name));
   } else {
     name.appendChild(document.createTextNode('Anonymous'));
   }
 
   /* TODO: actually do all the processing to make it a real message. */
-  if (data.message) {
-    message.appendChild(document.createTextNode(data.message));
+  if (data.Message) {
+    message.appendChild(document.createTextNode(data.Message));
   } else {
     message.appendChild(document.createTextNode(''));
   }
 
-  chat.appendChild(name);
-  chat.appendChild(message);
+  if (data.Date) {
+    date.appendChild(document.createTextNode((new Date(data.Date)).toLocaleString()));
+  }
+
+  if (data.Trip) {
+    trip.appendChild(document.createTextNode(data.Trip));
+  }
+
+  if (data.Count) {
+    count.appendChild(document.createTextNode(data.Count));
+    count.addEventListener('click', function() {
+      console.log(data.Count);
+    });
+  }
+
+  header.appendChild(name);
+  header.appendChild(trip);
+  header.appendChild(date);
+  header.appendChild(count);
+  body.appendChild(message);
+
+  chat.appendChild(header);
+  chat.appendChild(body);
   return chat;
 }
 
@@ -173,7 +206,13 @@ function generateChat(data) {
  */
 function initOutput(outputElem, connection) {
   connection.onmessage(function(data) {
-    insertChat(outputElem, generateChat(data));
+    if( Object.prototype.toString.call(data) === '[object Array]' ) {
+      for (var i = 0; i < data.length; i++) {
+        insertChat(outputElem, generateChat(data[i]));
+      }
+    } else {
+      insertChat(outputElem, generateChat(data));
+    }
   });
   connection.onclose(function() {
     connection.ws = null;

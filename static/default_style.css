@@ -14,7 +14,10 @@
   color: green;
 }
 
+.livechan_chat_output_count:hover {
+  color: red;
+}
+
 .livechan_chat_input {
   background: #98E;
 }
-
