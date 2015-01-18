@@ -21,3 +21,24 @@
 .livechan_chat_input {
   background: #98E;
 }
+
+.livechan_greentext {
+  color: #789922;
+}
+
+.livechan_boldtext {
+  font-weight: bold;
+}
+
+.livechan_internallink {
+  color: blue;
+}
+
+.livechan_internallink:hover {
+  color: red;
+  cursor: pointer;
+}
+
+.livechan_chat_selected {
+  background: blue;
+}

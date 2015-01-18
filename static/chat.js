@@ -177,14 +177,44 @@ var messageRules = [
   [/\r?\n/g, function(m) {
     return document.createElement('br');
   }],
+  [/>>([0-9]+)/g, function(m) {
+    var out = document.createElement('span');
+    out.className = 'livechan_internallink';
+    out.addEventListener('click', function() {
+      var selected = document.getElementById('livechan_chat_'+m[1]);
+      selected.scrollIntoView(true);
+    });
+    out.appendChild(document.createTextNode('>>'+m[1]));
+    return out;
+  }],
   [/^>.+/g, function(m) {
     var out = document.createElement('span');
-    out.style.color = 'green';
+    out.className = 'livechan_greentext';
     out.appendChild(document.createTextNode(m));
     return out;
   }],
-  [/\[code\](.*)\[\/code\]/g, function(m) {
-  }]
+  [/\[code\]\n?([\s\S]+)\[\/code\]/g, function(m) {
+    var out;
+    if (m.length >= 2 && m[1].trim !== '') {
+      out = document.createElement('pre');
+      out.textContent = m[1];
+    } else {
+      out = document.createTextNode(m);
+    }
+    return out;
+  }],
+  [/\[b\]\n?([\s\S]+)\[\/b\]/g, function(m) {
+    var out;
+    if (m.length >= 2 && m[1].trim !== '') {
+      out = document.createElement('span');
+      out.className = 'livechan_boldtext';
+      out.textContent = m[1];
+    } else {
+      out = document.createTextNode(m);
+    }
+    return out;
+  }],
+
 ]
 
 /* @brief Generates a chat div.
@@ -234,6 +264,7 @@ function generateChat(data) {
   }
 
   if (data.Count) {
+    count.setAttribute('id', 'livechan_chat_'+data.Count);
     count.appendChild(document.createTextNode(data.Count));
     count.addEventListener('click', function() {
       console.log(data.Count);
