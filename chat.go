@@ -4,6 +4,7 @@ import (
   "encoding/json"
   "fmt"
   "time"
+  "strings"
 )
 
 var count uint64 = 0
@@ -33,9 +34,12 @@ func createChat(data []byte, conn *Connection) *Chat{
     fmt.Println("error: ", err)
   }
 
+  c.Name = strings.TrimSpace(c.Name)
   if len(c.Name) == 0 {
     c.Name = "Anonymous"
   }
+
+  c.Message = strings.TrimSpace(c.Message)
 
   c.Date = time.Now()
   c.IpAddr = conn.ipAddr

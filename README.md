@@ -13,5 +13,5 @@ git clone https://github.com/emgram769/livechan.git
 ```
 4. Run the server.
 ```
-go run server.go
+go run *.go
 ```
