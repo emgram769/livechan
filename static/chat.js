@@ -158,9 +158,6 @@ function parse(text, rules, end_tag) {
 }
 
 var messageRules = [
-  [/\r?\n/g, function(m) {
-    return document.createElement('br');
-  }],
   [/>>([0-9]+)/g, function(m) {
     var out = document.createElement('span');
     out.className = 'livechan_internallink';
@@ -171,7 +168,7 @@ var messageRules = [
     out.appendChild(document.createTextNode('>>'+m[1]));
     return out;
   }],
-  [/^>.+/g, function(m) {
+  [/^>.+/mg, function(m) {
     var out = document.createElement('span');
     out.className = 'livechan_greentext';
     out.appendChild(document.createTextNode(m));
@@ -197,6 +194,9 @@ var messageRules = [
       out = document.createTextNode(m);
     }
     return out;
+  }],
+  [/\r?\n/g, function(m) {
+    return document.createElement('br');
   }],
 
 ]
