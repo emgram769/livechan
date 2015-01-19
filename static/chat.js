@@ -341,7 +341,8 @@ Chat.prototype.generateChat = function(data) {
     name.appendChild(document.createTextNode('Anonymous'));
   }
 
-  /* TODO: actually do all the processing to make it a real message. */
+  /* Note that parse does everything here.  If you want to change
+   * how things are rendered modify messageRules. */
   if (data.Message) {
     message.appendChild(parse(data.Message, messageRules));
   } else {
@@ -361,7 +362,7 @@ Chat.prototype.generateChat = function(data) {
     count.setAttribute('id', 'livechan_chat_'+data.Count);
     count.appendChild(document.createTextNode(data.Count));
     count.addEventListener('click', function() {
-      //self.input.message.value += '>>'+data.Count+'\n';
+      self.chatElems.input.message.value += '>>'+data.Count+'\n';
     });
   }
 
