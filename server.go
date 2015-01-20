@@ -48,7 +48,7 @@ func (h *Hub) run() {
         h.channels[c.channelName] = make(map[*Connection]time.Time)
       }
       h.channels[c.channelName][c] = time.Unix(0,0)
-      c.send <- createJSONs(getChats(c.channelName, "General"))
+      c.send <- createJSONs(getChats(c.channelName, "General", 50))
     case c := <-h.unregister:
       if _, ok := h.channels[c.channelName][c]; ok {
         delete(h.channels[c.channelName], c)

@@ -158,11 +158,11 @@ func getConvos(channelName string) []string{
   return outputConvos
 }
 
-func getChats(channelName string, convoName string) []Chat {
+func getChats(channelName string, convoName string, numChats uint64) []Chat {
   var outputChats []Chat
   if len(convoName) > 0 {
     stmt, err := livechanDB.Prepare(`
-    select ip, name, trip, country, message, count, date,
+    select * from (select ip, name, trip, country, message, count, date,
       file_path, file_name, file_preview, file_size,
       file_dimensions
     from chats
@@ -171,13 +171,13 @@ func getChats(channelName string, convoName string) []Chat {
     ) and channel = (
       select id from Channels where name = ?
     )
-    order by count limit 100`)
+    order by count desc limit ?) order by count asc`)
     if err != nil {
       fmt.Println("Couldn't get chats.", err)
       return outputChats
     }
     defer stmt.Close()
-    rows, err := stmt.Query(convoName, channelName)
+    rows, err := stmt.Query(convoName, channelName, numChats)
     if err != nil {
       fmt.Println("Couldn't get chats.", err)
       return outputChats
