@@ -7,24 +7,37 @@ import (
   "strings"
 )
 
-var count uint64 = 0
-
 /* To be stored in the DB. */
 type Chat struct {
-  Message string
-  Name string
-  Date time.Time
-  Count uint64
   IpAddr string
+  Name string
+  Trip string
+  Country string
+  Message string
+  Count uint64
+  Date time.Time
+  FilePath string
+  FileName string
+  FilePreview string
+  FileSize string
+  FileDimensions string
+  Convo string
 }
 
 /* To be visible to users. */
 type OutChat struct {
-  Message string
   Name string
-  Date time.Time
-  Count uint64
   Trip string
+  Country string
+  Message string
+  Count uint64
+  Date time.Time
+  FilePath string
+  FileName string
+  FilePreview string
+  FileSize string
+  FileDimensions string
+  Convo string
 }
 
 func createChat(data []byte, conn *Connection) *Chat{
@@ -39,9 +52,14 @@ func createChat(data []byte, conn *Connection) *Chat{
     c.Name = "Anonymous"
   }
 
+  c.Convo = strings.TrimSpace(c.Convo)
+  if len(c.Convo) == 0 {
+    c.Convo = "General"
+  }
+
   c.Message = strings.TrimSpace(c.Message)
 
-  c.Date = time.Now()
+  c.Date = time.Now().UTC()
   c.IpAddr = conn.ipAddr
   return c
 }
@@ -52,6 +70,7 @@ func createJSON(chat *Chat) []byte{
     Message: chat.Message,
     Date: chat.Date,
     Count: chat.Count,
+    Convo: chat.Convo,
   }
   j, err := json.Marshal(outChat)
   if err != nil {
@@ -68,6 +87,7 @@ func createJSONs(chats []Chat) []byte{
       Message: chat.Message,
       Date: chat.Date,
       Count: chat.Count,
+      Convo: chat.Convo,
     }
     outChats = append(outChats, outChat)
   }
@@ -87,8 +107,7 @@ func canBroadcast(chat *Chat, conn *Connection) bool{
     return false
   }
   h.channels[conn.channelName][conn] = time.Now()
-  count = count + 1
-  chat.Count = count
+  chat.Count = getCount(conn.channelName) + 1
   return true
 }
 
