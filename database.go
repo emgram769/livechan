@@ -232,7 +232,7 @@ func initDB() {
     trip VARCHAR(255),
     country VARCHAR(255),
     message TEXT,
-    count INTEGER UNIQUE ON CONFLICT REPLACE,
+    count INTEGER,
     date INTEGER,
     file_path TEXT,
     file_name TEXT,
@@ -244,7 +244,8 @@ func initDB() {
     FOREIGN KEY(convo)
       REFERENCES Convos(id) ON DELETE CASCADE,
     FOREIGN KEY(channel)
-      REFERENCES Channels(id) ON DELETE CASCADE
+      REFERENCES Channels(id) ON DELETE CASCADE,
+    UNIQUE(count, channel) ON CONFLICT REPLACE
   )`
   _, err = db.Exec(createChats)
   if err != nil {
