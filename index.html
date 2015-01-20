@@ -14,6 +14,9 @@ window.addEventListener('load', function() {
   chatName = chatName ? chatName : 'General';
   var options = {
     customCommands: [
+      [/s(witch)? (.*)/, function(m) {
+        window.location.href = m[2];
+      }]
     ]
   };
   var c1 = new Chat(document.getElementById('chat'), chatName, options);
