@@ -171,7 +171,7 @@ func getChats(channelName string, convoName string) []Chat {
     ) and channel = (
       select id from Channels where name = ?
     )
-    order by count limit 10`)
+    order by count limit 100`)
     if err != nil {
       fmt.Println("Couldn't get chats.", err)
       return outputChats

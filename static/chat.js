@@ -201,13 +201,42 @@ var messageRules = [
 
 ]
 
+/* @brief Creates a chat.
+ *
+ * @param domElem The element to populate with chat
+ *        output div and input form.
+ * @param channel The channel to bind the chat to.
+ */
+function Chat(domElem, channel, options) {
+  this.chatElems = buildChat(domElem);
+  this.connection = initWebSocket(channel);
+  this.initOutput();
+  this.initInput();
+  if (options) {
+    this.options = options;
+  } else {
+    this.options = {};
+  }
+}
+
 /* @brief Sends the message in the form.
  *
- * @param inputElem The form itself.
- * @param connection The websocket connection.
  * @param event The event causing a message to be sent.
  */
-function sendInput(inputElem, connection, event) {
+Chat.prototype.sendInput = function(event) {
+  var inputElem = this.chatElems.input;
+  var connection = this.connection;
+  /*if (inputElem.message.value[0] == '/' &&
+      this.options.customCommands) {
+    console.log("SDF");
+    for (var i in this.options.customCommands) {
+      var regexPair = this.options.customCommands;
+      var match = regexPair[0].exec(inputElem.message.value.slice(1));
+      if (match) {
+        (regexPair[1])(match);
+      }
+    }
+  }*/
   if (inputElem.submit.disabled == false) {
     connection.send({
       message: inputElem.message.value,
@@ -230,32 +259,20 @@ function sendInput(inputElem, connection, event) {
   }
 }
 
-/* @brief Creates a chat.
- *
- * @param domElem The element to populate with chat
- *        output div and input form.
- * @param channel The channel to bind the chat to.
- */
-function Chat(domElem, channel) {
-  this.chatElems = buildChat(domElem);
-  this.connection = initWebSocket(channel);
-  this.initOutput();
-  this.initInput();
-}
-
 /* @brief Binds the form submission to websockets.
  */
 Chat.prototype.initInput = function() {
   var inputElem = this.chatElems.input;
   var connection = this.connection;
+  var self = this;
   inputElem.form.addEventListener('submit', function(event) {
-    sendInput(inputElem, connection, event);
+    self.sendInput(event);
   });
   
   inputElem.message.addEventListener('keydown', function(event) {
     /* If enter key. */
     if (event.keyCode === 13 && !event.shiftKey) {
-      sendInput(inputElem, connection, event);
+      self.sendInput(event);
     }
   });
 }

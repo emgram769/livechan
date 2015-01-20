@@ -142,10 +142,10 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
 }
 
 func htmlServer(w http.ResponseWriter, req *http.Request) {
-  if req.URL.Path != "/" {
+  /*if req.URL.Path != "/" {
     http.Error(w, "Method not allowed", 405)
     return
-  }
+  }*/
   if req.Method != "GET" {
     http.Error(w, "Method not allowed", 405)
     return
