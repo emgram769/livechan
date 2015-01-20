@@ -5,6 +5,8 @@ import (
   "net/http"
   "time"
   "log"
+  "fmt"
+  "strings"
 )
 
 const (
@@ -134,18 +136,36 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
     return
   }
   c := &Connection{send: make(chan []byte, 256), ws: ws}
-  c.channelName = req.URL.Path[1:]
+  c.channelName = req.URL.Path[4:]
   c.ipAddr = req.RemoteAddr
   h.register <- c
   go c.writePump()
   c.readPump()
 }
 
-func htmlServer(w http.ResponseWriter, req *http.Request) {
-  /*if req.URL.Path != "/" {
+func channelServer(w http.ResponseWriter, req *http.Request) {
+  if req.Method != "GET" {
     http.Error(w, "Method not allowed", 405)
     return
-  }*/
+  }
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprintf(w, "%+v", getChannels());
+}
+
+func convoServer(w http.ResponseWriter, req *http.Request) {
+  if req.Method != "GET" {
+    http.Error(w, "Method not allowed", 405)
+    return
+  }
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprintf(w, "%+v %s", getConvos(req.URL.Path[8:]), req.URL.Path[8:]);
+}
+
+func htmlServer(w http.ResponseWriter, req *http.Request) {
+  if strings.Contains(req.URL.Path[1:], "/") {
+    http.Error(w, "Method not allowed", 405)
+    return
+  }
   if req.Method != "GET" {
     http.Error(w, "Method not allowed", 405)
     return
@@ -161,6 +181,8 @@ func staticServer(w http.ResponseWriter, req *http.Request) {
 func main() {
   initDB()
   go h.run()
+  http.HandleFunc("/channels", channelServer)
+  http.HandleFunc("/convos/", convoServer)
   http.HandleFunc("/", htmlServer)
   http.HandleFunc("/ws/", wsServer)
   http.HandleFunc("/static/", staticServer)

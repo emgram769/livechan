@@ -47,11 +47,15 @@ func insertChat(channelName string, chat Chat) {
   if channelId == 0 {
     insertChannel(channelName)
     channelId = getChatChannelId(channelName)
+    if channelId == 0 {
+      fmt.Println("Error creating channel.");
+      return
+    }
   }
-  convoId := getChatConvoId(chat.Convo)
+  convoId := getChatConvoId(channelId, chat.Convo)
   if convoId == 0 {
     insertConvo(channelId, chat.Convo)
-    convoId = getChatConvoId(chat.Convo)
+    convoId = getChatConvoId(channelId, chat.Convo)
   }
 
   tx, err := livechanDB.Begin()
@@ -79,15 +83,15 @@ func insertChat(channelName string, chat Chat) {
   }
 }
 
-func getChatConvoId(convoName string)int {
-  stmt, err := livechanDB.Prepare("select id from Convos where name = ?")
+func getChatConvoId(channelId int, convoName string)int {
+  stmt, err := livechanDB.Prepare("select id from Convos where name = ? and channel = ?")
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return 0
   }
   defer stmt.Close()
   var id int
-  err = stmt.QueryRow(convoName).Scan(&id)
+  err = stmt.QueryRow(convoName, channelId).Scan(&id)
   if err != nil {
     return 0
   }
@@ -126,6 +130,35 @@ func getCount(channelName string) uint64{
   return count
 }
 
+func getChannels() []string{
+  var outputChannels []string
+  stmt, err := livechanDB.Prepare(`
+  select channels.name, MAX(chats.date)
+  from channels
+    left join chats on chats.channel = channels.id
+  group by channels.name
+  order by chats.date desc 
+  limit 20`)
+  if err != nil {
+    fmt.Println("Couldn't get channels.", err)
+    return outputChannels
+  }
+  defer stmt.Close()
+  rows, err := stmt.Query()
+  if err != nil {
+    fmt.Println("Couldn't get channels.", err)
+    return outputChannels
+  }
+  defer rows.Close()
+  for rows.Next() {
+    var channelDate int
+    var channelName string
+    rows.Scan(&channelName, &channelDate)
+    outputChannels = append(outputChannels, channelName)
+  }
+  return outputChannels
+}
+
 func getConvos(channelName string) []string{
   var outputConvos []string
   stmt, err := livechanDB.Prepare(`
@@ -137,7 +170,7 @@ func getConvos(channelName string) []string{
   )
   group by convos.name
   order by chats.date desc 
-  limit 2`)
+  limit 20`)
   if err != nil {
     fmt.Println("Couldn't get convos.", err)
     return outputConvos
@@ -162,22 +195,22 @@ func getChats(channelName string, convoName string, numChats uint64) []Chat {
   var outputChats []Chat
   if len(convoName) > 0 {
     stmt, err := livechanDB.Prepare(`
-    select * from (select ip, name, trip, country, message, count, date,
-      file_path, file_name, file_preview, file_size,
-      file_dimensions
+    select * from 
+    (select ip, chats.name, trip, country, message, count, date,
+        file_path, file_name, file_preview, file_size,
+        file_dimensions
     from chats
-    where convo = (
-      select id from Convos where name = ?
-    ) and channel = (
-      select id from Channels where name = ?
-    )
+    join (select * from channels where channels.name = ?)
+      as filtered_channels on chats.channel=filtered_channels.id
+    join (select * from convos where convos.name = ?)
+      as filtered_convos on chats.convo=filtered_convos.id
     order by count desc limit ?) order by count asc`)
     if err != nil {
       fmt.Println("Couldn't get chats.", err)
       return outputChats
     }
     defer stmt.Close()
-    rows, err := stmt.Query(convoName, channelName, numChats)
+    rows, err := stmt.Query(channelName, convoName, numChats)
     if err != nil {
       fmt.Println("Couldn't get chats.", err)
       return outputChats
