@@ -252,29 +252,5 @@ func initDB() {
   }
 
   livechanDB = db
-
-  /*var chat Chat
-  chat.Count = 3
-  chat.Convo = "General"
-  chat.Date = time.Unix(100,0)
-  chat.Message = "hiy234a"
-  chat.IpAddr = "324234"
-  insertChat("test", chat)
-  chat.Count = 4
-  chat.Convo = "General2"
-  chat.Date = time.Unix(500,0)
-  chat.IpAddr = "93242"
-  chat.Message = "[pffffp["
-  insertChat("test", chat)
-  chat.Count = 5
-  chat.Message = "florida"
-  chat.Convo = "General3"
-  chat.Date = time.Unix(300,0)
-  insertChat("test", chat)
-  chat.Count = 6
-  chat.Convo = "General4"
-  chat.Date = time.Unix(400,0)
-  insertChat("test", chat)
-  fmt.Printf("%+v\n", getConvos("test"))*/
 }
 
