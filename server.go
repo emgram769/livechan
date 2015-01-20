@@ -130,6 +130,10 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
     http.Error(w, "Method not allowed", 405)
     return
   }
+  if (getChatChannelId(req.URL.Path[4:]) == 0) {
+    http.Error(w, "Method not allowed", 405)
+    return
+  }
   ws, err := upgrader.Upgrade(w, req, nil)
   if err != nil {
     log.Println(err)
@@ -168,6 +172,10 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
   }
   if req.Method != "GET" {
     http.Error(w, "Method not allowed", 405)
+    return
+  }
+  if (getChatChannelId(req.URL.Path[1:]) == 0) {
+    http.Error(w, "No registration pages, yet!", 405)
     return
   }
   w.Header().Set("Content-Type", "text/html; charset=utf-8")

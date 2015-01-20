@@ -34,10 +34,6 @@ function saveDefault(key, value) {
 }
 
 function loadCSS(themeName, replace, callback) {
-  if (replace) {
-    var par = replace.parentNode;
-    par.removeChild(replace);
-  }
   var link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = '/static/theme/' + themeName + '.css';
@@ -47,6 +43,10 @@ function loadCSS(themeName, replace, callback) {
   place = document.getElementsByTagName('link')[0];
   place.parentNode.insertBefore(link, place);
   saveDefault('theme', themeName);
+  if (replace) {
+    var par = replace.parentNode;
+    par.removeChild(replace);
+  }
   return link;
 }
 
