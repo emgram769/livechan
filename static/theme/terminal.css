@@ -39,7 +39,3 @@ body {
   background: #111;
 }
 
-.livechan_chat_input_message:before {
-  content: ">";
-}
-
