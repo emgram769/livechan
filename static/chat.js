@@ -226,17 +226,19 @@ function Chat(domElem, channel, options) {
 Chat.prototype.sendInput = function(event) {
   var inputElem = this.chatElems.input;
   var connection = this.connection;
-  /*if (inputElem.message.value[0] == '/' &&
+  if (inputElem.message.value[0] == '/' &&
       this.options.customCommands) {
-    console.log("SDF");
     for (var i in this.options.customCommands) {
-      var regexPair = this.options.customCommands;
+      var regexPair = this.options.customCommands[i];
       var match = regexPair[0].exec(inputElem.message.value.slice(1));
       if (match) {
         (regexPair[1])(match);
+        inputElem.message.value = '';
       }
     }
-  }*/
+    event.preventDefault();
+    return false;
+  }
   if (inputElem.submit.disabled == false) {
     connection.send({
       message: inputElem.message.value,
