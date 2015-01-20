@@ -1,4 +1,39 @@
-function loadCSS(themeName, replace) {
+var defaults = {
+  theme: 'default'
+}
+
+function loadDefault(key) {
+  if (localStorage) {
+    try {
+      var localDefaults = JSON.parse(localStorage.getItem('defaults'));
+      if (localDefaults && localDefaults[key]) {
+        return localDefaults[key];
+      }
+    } catch (e) {
+      console.log(e);
+      localStorage.removeItem('defaults');
+    }
+  }
+  return defaults[key];
+}
+
+function saveDefault(key, value) {
+  if (localStorage) {
+    try {
+      var localDefaults = JSON.parse(localStorage.getItem('defaults'));
+      if (!localDefaults) {
+        localDefaults = {};
+      }
+      localDefaults[key] = value;
+      localStorage.setItem('defaults', JSON.stringify(localDefaults));
+    } catch (e) {
+      console.log(e);
+      localStorage.removeItem('defaults');
+    }
+  }
+}
+
+function loadCSS(themeName, replace, callback) {
   if (replace) {
     var par = replace.parentNode;
     par.removeChild(replace);
@@ -6,8 +41,12 @@ function loadCSS(themeName, replace) {
   var link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = '/static/theme/' + themeName + '.css';
+  if (callback) {
+    link.addEventListener('load', callback, false);
+  }
   place = document.getElementsByTagName('link')[0];
   place.parentNode.insertBefore(link, place);
+  saveDefault('theme', themeName);
   return link;
 }
 
@@ -15,14 +54,17 @@ function loadCSS(themeName, replace) {
 window.addEventListener('load', function() {
   var chatName = location.pathname.slice(1);
   chatName = chatName ? chatName : 'General';
-  var link = loadCSS('default');
+  var link = loadCSS(loadDefault('theme'));
   var options = {
     customCommands: [
       [/s(witch)? (.*)/, function(m) {
         window.location.href = m[2];
       }],
       [/t(heme)? (.*)/, function(m) {
-        link = loadCSS(m[2], link);
+        var chat = this;
+        link = loadCSS(m[2], link, function(){
+          chat.scroll();
+        });
       }]
     ]
   };

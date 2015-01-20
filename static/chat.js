@@ -232,7 +232,7 @@ Chat.prototype.sendInput = function(event) {
       var regexPair = this.options.customCommands[i];
       var match = regexPair[0].exec(inputElem.message.value.slice(1));
       if (match) {
-        (regexPair[1])(match);
+        (regexPair[1]).call(this, match);
         inputElem.message.value = '';
       }
     }
@@ -277,6 +277,7 @@ Chat.prototype.initInput = function() {
       self.sendInput(event);
     }
   });
+  inputElem.message.focus();
 }
 
 /* @brief Binds messages to be displayed to the output.
@@ -307,6 +308,12 @@ Chat.prototype.initOutput = function() {
   });
 }
 
+/* @brief Scrolls the chat to the bottom.
+ */
+Chat.prototype.scroll = function() {
+  this.chatElems.output.scrollTop = this.chatElems.output.scrollHeight;
+}
+
 /* @brief Inserts the chat into the DOM, overwriting if need be.
  *
  * @TODO: Actually scan and insert appropriately for varying numbers.
@@ -325,7 +332,7 @@ Chat.prototype.insertChat = function(chat, number) {
                  - outputElem.scrollHeight);
   outputElem.appendChild(chat);
   if (doScroll < 5) {
-    outputElem.scrollTop = outputElem.scrollHeight;
+    this.scroll();
   }
 }
 
@@ -382,6 +389,7 @@ Chat.prototype.generateChat = function(data) {
     count.appendChild(document.createTextNode(data.Count));
     count.addEventListener('click', function() {
       self.chatElems.input.message.value += '>>'+data.Count+'\n';
+      self.chatElems.input.message.focus();
     });
   }
 

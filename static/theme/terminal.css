@@ -1,0 +1,45 @@
+body {
+  font-family: source-code-pro, Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  background: #111;
+  color: #bbb;
+}
+
+.livechan_chat_output_chat {
+  padding: 0 4px;
+  margin: 0 4px;
+}
+
+.livechan_chat_output_header * {
+  color: #777;
+}
+
+.livechan_chat_output_name { 
+  color: #bbb;
+  float: left;
+  margin-right: 4px;
+  font-weight: bold;
+}
+
+.livechan_chat_output_count {
+  float: right;
+}
+
+.livechan_chat_output_date {
+  float: right;
+  display: none;
+}
+
+.livechan_chat_output_name:after {
+  content: ":";
+}
+
+.livechan_chat_input * {
+  font-family: source-code-pro, Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  color: #bbb;
+  background: #111;
+}
+
+.livechan_chat_input_message:before {
+  content: ">";
+}
+
