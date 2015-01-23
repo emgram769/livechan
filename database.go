@@ -7,10 +7,14 @@ import (
   "time"
 )
 
-var livechanDB *sql.DB
+type Database struct {
+  db *sql.DB
+}
 
-func insertChannel(channelName string) {
-  tx, err := livechanDB.Begin()
+var storage *Database
+
+func (s *Database) insertChannel(channelName string) {
+  tx, err := s.db.Begin()
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return
@@ -25,8 +29,8 @@ func insertChannel(channelName string) {
   tx.Commit()
 }
 
-func insertConvo(channelId int, convoName string) {
-  tx, err := livechanDB.Begin()
+func (s *Database) insertConvo(channelId int, convoName string) {
+  tx, err := s.db.Begin()
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return
@@ -41,24 +45,24 @@ func insertConvo(channelId int, convoName string) {
   tx.Commit()
 }
 
-func insertChat(channelName string, chat Chat) {
+func (s *Database) insertChat(channelName string, chat Chat) {
   /* Get the ids. */
-  channelId := getChatChannelId(channelName)
+  channelId := s.getChatChannelId(channelName)
   if channelId == 0 {
-    insertChannel(channelName)
-    channelId = getChatChannelId(channelName)
+    s.insertChannel(channelName)
+    channelId = s.getChatChannelId(channelName)
     if channelId == 0 {
       fmt.Println("Error creating channel.");
       return
     }
   }
-  convoId := getChatConvoId(channelId, chat.Convo)
+  convoId := s.getChatConvoId(channelId, chat.Convo)
   if convoId == 0 {
-    insertConvo(channelId, chat.Convo)
-    convoId = getChatConvoId(channelId, chat.Convo)
+    s.insertConvo(channelId, chat.Convo)
+    convoId = s.getChatConvoId(channelId, chat.Convo)
   }
 
-  tx, err := livechanDB.Begin()
+  tx, err := s.db.Begin()
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return
@@ -83,8 +87,8 @@ func insertChat(channelName string, chat Chat) {
   }
 }
 
-func getChatConvoId(channelId int, convoName string)int {
-  stmt, err := livechanDB.Prepare("select id from Convos where name = ? and channel = ?")
+func (s *Database) getChatConvoId(channelId int, convoName string)int {
+  stmt, err := s.db.Prepare("select id from Convos where name = ? and channel = ?")
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return 0
@@ -98,8 +102,8 @@ func getChatConvoId(channelId int, convoName string)int {
   return id
 }
 
-func getChatChannelId(channelName string)int {
-  stmt, err := livechanDB.Prepare("select id from Channels where name = ?")
+func (s *Database) getChatChannelId(channelName string)int {
+  stmt, err := s.db.Prepare("select id from Channels where name = ?")
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return 0
@@ -113,8 +117,8 @@ func getChatChannelId(channelName string)int {
   return id
 }
 
-func getCount(channelName string) uint64{
-  stmt, err := livechanDB.Prepare(`
+func (s *Database) getCount(channelName string) uint64{
+  stmt, err := s.db.Prepare(`
   select MAX(count)
   from chats
   where channel = (
@@ -130,9 +134,9 @@ func getCount(channelName string) uint64{
   return count
 }
 
-func getChannels() []string{
+func (s *Database) getChannels() []string{
   var outputChannels []string
-  stmt, err := livechanDB.Prepare(`
+  stmt, err := s.db.Prepare(`
   select channels.name, MAX(chats.date)
   from channels
     left join chats on chats.channel = channels.id
@@ -159,9 +163,9 @@ func getChannels() []string{
   return outputChannels
 }
 
-func getConvos(channelName string) []string{
+func (s *Database) getConvos(channelName string) []string{
   var outputConvos []string
-  stmt, err := livechanDB.Prepare(`
+  stmt, err := s.db.Prepare(`
   select convos.name, MAX(chats.date)
   from convos
     left join chats on chats.convo = convos.id
@@ -191,10 +195,10 @@ func getConvos(channelName string) []string{
   return outputConvos
 }
 
-func getChats(channelName string, convoName string, numChats uint64) []Chat {
+func (s *Database) getChats(channelName string, convoName string, numChats uint64) []Chat {
   var outputChats []Chat
   if len(convoName) > 0 {
-    stmt, err := livechanDB.Prepare(`
+    stmt, err := s.db.Prepare(`
     select * from 
     (select ip, chats.name, trip, country, message, count, date,
         file_path, file_name, file_preview, file_size,
@@ -230,7 +234,7 @@ func getChats(channelName string, convoName string, numChats uint64) []Chat {
   return outputChats
 }
 
-func initDB() {
+func initDB() *sql.DB{
   db, err := sql.Open("sqlite3", "./livechan.db");
   if err != nil {
     fmt.Println("Unable to open db.", err);
@@ -285,6 +289,6 @@ func initDB() {
     fmt.Println("Unable to create Chats.", err);
   }
 
-  livechanDB = db
+  return db
 }
 

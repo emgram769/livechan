@@ -64,7 +64,7 @@ func createChat(data []byte, conn *Connection) *Chat{
   return c
 }
 
-func createJSON(chat *Chat) []byte{
+func (chat *Chat) createJSON() []byte{
   outChat := OutChat{
     Name: chat.Name,
     Message: chat.Message,
@@ -98,7 +98,7 @@ func createJSONs(chats []Chat) []byte{
   return j
 }
 
-func canBroadcast(chat *Chat, conn *Connection) bool{
+func (chat *Chat) canBroadcast(conn *Connection) bool{
   if len(chat.Message) == 0 {
     return false
   }
@@ -107,7 +107,7 @@ func canBroadcast(chat *Chat, conn *Connection) bool{
     return false
   }
   h.channels[conn.channelName][conn] = time.Now()
-  chat.Count = getCount(conn.channelName) + 1
+  chat.Count = storage.getCount(conn.channelName) + 1
   return true
 }
 
