@@ -1,7 +1,7 @@
 body {
   font-family: source-code-pro, Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
   background: #111;
-  color: #bbb;
+  color: #ddd;
 }
 
 .livechan_chat_output_chat {
@@ -14,7 +14,7 @@ body {
 }
 
 .livechan_chat_output_name { 
-  color: #bbb;
+  color: #ddd;
   float: left;
   margin-right: 4px;
   font-weight: bold;
@@ -35,7 +35,7 @@ body {
 
 .livechan_chat_input * {
   font-family: source-code-pro, Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
-  color: #bbb;
+  color: #ddd;
   background: #111;
 }
 

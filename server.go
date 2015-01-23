@@ -174,7 +174,11 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
     http.Error(w, "Method not allowed", 405)
     return
   }
-  if (getChatChannelId(req.URL.Path[1:]) == 0) {
+  var channelName = req.URL.Path[1:]
+  if channelName == "" {
+    channelName = "General"
+  }
+  if (getChatChannelId(channelName) == 0) {
     http.Error(w, "No registration pages, yet!", 405)
     return
   }
