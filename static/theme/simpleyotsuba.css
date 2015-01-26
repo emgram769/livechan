@@ -1,0 +1,64 @@
+.livechan_chat_output {
+  background: #EEF2FF;
+}
+
+.livechan_chat_output_chat {
+  font-family: sans-serif;
+  background: #D6DAF0;
+  margin: 4px;
+  padding: 4px;
+  position: relative;
+}
+
+.livechan_chat_output_name {
+  float: left;
+  font-weight: bold;
+  color: green;
+  margin-right: 2px;
+}
+
+.livechan_chat_output_name::after{
+  content: ":";
+}
+
+.livechan_chat_output_count {
+  float: right;
+}
+
+.livechan_chat_output_date {
+  display: none;
+  font-style: italic;
+  color: #777;
+  position: absolute;
+  top: -10px;
+}
+
+.livechan_chat_output_count:hover {
+  color: red;
+}
+
+.livechan_chat_input {
+  background: #98E;
+}
+
+.livechan_greentext {
+  color: #789922;
+}
+
+.livechan_boldtext {
+  font-weight: bold;
+}
+
+.livechan_internallink {
+  color: blue;
+}
+
+.livechan_internallink:hover {
+  color: red;
+  cursor: pointer;
+}
+
+.livechan_chat_selected {
+  background: blue;
+}
+

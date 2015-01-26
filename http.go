@@ -1,6 +1,7 @@
 package main
 
 import (
+  "github.com/dchest/captcha"
   "github.com/gorilla/websocket"
   "net/http"
   "fmt"
@@ -85,6 +86,18 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
 
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
   http.ServeFile(w, req, "index.html")
+}
+
+func captchaServer(w http.ResponseWriter, req *http.Request) {
+  if req.Method == "GET" {
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprintf(w, "{captcha: %s}", captcha.New());
+    return
+  } else if req.Method == "POST" {
+    if captcha.VerifyString(req.FormValue("captchaId"), req.FormValue("captchaSolution")) {
+    } else {
+    }
+  }
 }
 
 func staticServer(w http.ResponseWriter, req *http.Request) {

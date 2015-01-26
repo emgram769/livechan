@@ -234,6 +234,69 @@ func (s *Database) getChats(channelName string, convoName string, numChats uint6
   return outputChats
 }
 
+func (s *Database) getPermissions(channelName string, userName string) uint64 {
+  stmt, err := s.db.Prepare(`
+  select permissions from Owners
+  where user = (select id from users where name = ?)
+  and channel = (select id from channels where name = ?)
+  `)
+  if err != nil {
+    fmt.Println("Error: could not access DB.", err);
+    return 0
+  }
+  defer stmt.Close()
+  var permissions uint64
+  err = stmt.QueryRow(userName, channelName).Scan(&permissions)
+  if err != nil {
+    return 0
+  }
+  return 0
+}
+
+func (s *Database) isBanned(channelName string, ipAddr string) bool {
+  stmt, err := s.db.Prepare(`
+  select COUNT(*) from Bans
+  where ip = ? and channel = (select id from channels where name = ?)
+  `)
+  if err != nil {
+    fmt.Println("Error: could not access DB.", err);
+    return false
+  }
+  defer stmt.Close()
+  var isbanned int
+  err = stmt.QueryRow(ipAddr, channelName).Scan(&isbanned)
+  if err != nil {
+    return false
+  }
+  if (isbanned > 0) {
+    return true
+  } else {
+    return false;
+  }
+}
+
+func (s *Database) getBan(channelName string, ipAddr string) Ban {
+  var ban Ban
+  stmt, err := s.db.Prepare(`
+  select offense, date, expiration, ip from Bans
+  where ip = ? and channel = (select id from channels where name = ?)
+  `)
+  if err != nil {
+    fmt.Println("Error: could not access DB.", err);
+    return ban
+  }
+  defer stmt.Close()
+  var unixTime int64
+  var unixTimeExpiration int64
+  err = stmt.QueryRow(ipAddr, channelName).Scan(&ban.Offense, &unixTime, &unixTimeExpiration, &ban.IpAddr)
+  ban.Date = time.Unix(0, unixTime)
+  ban.Expiration = time.Unix(0, unixTimeExpiration)
+  if err != nil {
+    return ban
+  }
+  return ban
+}
+
 func initDB() *sql.DB{
   db, err := sql.Open("sqlite3", "./livechan.db");
   if err != nil {
@@ -243,7 +306,11 @@ func initDB() *sql.DB{
   /* Create the tables. */
   createChannels := `CREATE TABLE IF NOT EXISTS Channels(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(255)
+    name VARCHAR(255),
+    api_key VARCHAR(255),
+    options TEXT,
+    restricted INTEGER,
+    generated INTEGER
   )`
   _, err = db.Exec(createChannels)
   if err != nil {
@@ -254,6 +321,8 @@ func initDB() *sql.DB{
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(255),
     channel INTEGER,
+    creator VARCHAR(255),
+    date INTEGER,
     FOREIGN KEY(channel)
       REFERENCES Channels(id) ON DELETE CASCADE
   )`
@@ -265,7 +334,7 @@ func initDB() *sql.DB{
   createChats := `CREATE TABLE IF NOT EXISTS Chats(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ip VARCHAR(255),
-    name TEXT,
+    name VARCHAR(255),
     trip VARCHAR(255),
     country VARCHAR(255),
     message TEXT,
@@ -287,6 +356,50 @@ func initDB() *sql.DB{
   _, err = db.Exec(createChats)
   if err != nil {
     fmt.Println("Unable to create Chats.", err);
+  }
+
+  createUsers := `CREATE TABLE IF NOT EXISTS Users(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(255),
+    password VARCHAR(255),
+    salt VARCHAR(255),
+    session VARCHAR(255),
+    date INTEGER,
+    identifiers TEXT
+  )`
+  _, err = db.Exec(createUsers)
+  if err != nil {
+    fmt.Println("Unable to create Users.", err);
+  }
+
+  createBans := `CREATE TABLE IF NOT EXISTS Bans(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip VARCHAR(255),
+    offense TEXT,
+    date INTEGER,
+    expiration INTEGER,
+    banner INTEGER,
+    FOREIGN KEY(banner)
+      REFERENCES Users(id) ON DELETE CASCADE
+  )`
+  _, err = db.Exec(createBans)
+  if err != nil {
+    fmt.Println("Unable to create Bans.", err);
+  }
+
+  createOwners := `CREATE TABLE IF NOT EXISTS Owners(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user INTEGER,
+    channel INTEGER,
+    permissions INTEGER,
+    FOREIGN KEY(user)
+      REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY(channel)
+      REFERENCES Channels(id) ON DELETE CASCADE
+  )`
+  _, err = db.Exec(createOwners)
+  if err != nil {
+    fmt.Println("Unable to create Owners.", err);
   }
 
   return db
