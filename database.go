@@ -69,7 +69,7 @@ func (s *Database) insertChat(channelName string, chat Chat) {
   }
   stmt, err := tx.Prepare(`
   insert into Chats(
-    ip, name, trip, country, message, count, date, 
+    ip, name, trip, country, message, count, chat_date, 
     file_path, file_name, file_preview, file_size, 
     file_dimensions, convo, channel
   )
@@ -200,7 +200,7 @@ func (s *Database) getChats(channelName string, convoName string, numChats uint6
   if len(convoName) > 0 {
     stmt, err := s.db.Prepare(`
     select * from 
-    (select ip, chats.name, trip, country, message, count, date,
+    (select ip, chats.name, trip, country, message, count, chat_date,
         file_path, file_name, file_preview, file_size,
         file_dimensions
     from chats
@@ -339,7 +339,7 @@ func initDB() *sql.DB{
     country VARCHAR(255),
     message TEXT,
     count INTEGER,
-    date INTEGER,
+    chat_date INTEGER,
     file_path TEXT,
     file_name TEXT,
     file_preview TEXT,
