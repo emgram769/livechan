@@ -92,3 +92,7 @@ input, textarea, select {
     font-style: italic;
     font-weight: lighter;
 }
+
+.livechan_image_thumb {
+    max-width: 100px;
+}

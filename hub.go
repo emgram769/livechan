@@ -12,12 +12,14 @@ type Message struct {
 type Hub struct {
   channels map[string]map[*Connection]time.Time
   broadcast chan Message
+	upload chan Message
   register chan *Connection
   unregister chan *Connection
 }
 
 var h = Hub {
-  broadcast: make(chan Message),
+	broadcast: make(chan Message),
+	upload: make(chan Message),
   register: make(chan *Connection),
   unregister: make(chan *Connection),
   channels: make(map[string]map[*Connection]time.Time),

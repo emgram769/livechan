@@ -9,10 +9,11 @@
  *
  * @param domElem The element to be populated with the
  *        chat structure.
+ * @param chatName The name of this chat
  * @return An object of references to the structure
  *         created.
  */
-function buildChat(domElem) {
+function buildChat(domElem, channel) {
   var output = document.createElement('div');
   output.className = 'livechan_chat_output';
 
@@ -25,10 +26,11 @@ function buildChat(domElem) {
 
   var file = document.createElement('input');
   file.className = 'livechan_chat_input_file';
-  file.setAttribute('type', 'button');
-  file.setAttribute('value', 'upload');
-  file.setAttribute('onclick', 'alert("not yet implemented");');
-
+  file.setAttribute('type', 'file');
+    file.setAttribute('value', 'upload');
+    file.setAttribute('id', channel+'_input_file');
+ 
+    
   var messageDiv = document.createElement('div');
   messageDiv.className = 'livechan_chat_input_message_div';
   
@@ -68,8 +70,9 @@ function Connection(ws, channel) {
 
 Connection.prototype.send = function(obj) {
   /* Jsonify the object and send as string. */
-  if (this.ws) {
-    this.ws.send(JSON.stringify(obj));
+    if (this.ws) {
+	var str = JSON.stringify(obj);
+	this.ws.send(str);
   }
 }
 
@@ -208,7 +211,7 @@ var messageRules = [
  * @param channel The channel to bind the chat to.
  */
 function Chat(domElem, channel, options) {
-  this.chatElems = buildChat(domElem);
+    this.chatElems = buildChat(domElem, channel);
   this.connection = initWebSocket(channel);
   this.initOutput();
   this.initInput();
@@ -219,15 +222,40 @@ function Chat(domElem, channel, options) {
   }
 }
 
+
 /* @brief called when our post got mentioned
  *
  * @param event the event that has this mention
  */
 Chat.prototype.Mentioned = function(event, chat) {
+    var self = this;
     self.notify("mentioned: "+chat);
 }
 
 Chat.prototype.onNotifyShow = function () {
+
+}
+
+Chat.prototype.readImage = function (elem, callback) {
+    var self = this;
+
+    var reader = new FileReader();
+    if (elem.files.length > 0 ) {
+	
+	var file = elem.files[0];
+	var filename = file.name;
+	var reader = new FileReader();
+	reader.onloadend = function (ev) {
+	    if ( ev.target.readyState == FileReader.DONE) {
+		callback(window.btoa(ev.target.result), filename);
+	    }
+	};
+	//reader.readAsText(file);
+	reader.readAsBinaryString(file);
+	//reader.readAsArrayBuffer(file);
+    } else {
+	callback(null, null);
+    }
 
 }
 
@@ -238,6 +266,8 @@ Chat.prototype.onNotifyShow = function () {
 Chat.prototype.sendInput = function(event) {
   var inputElem = this.chatElems.input;
   var connection = this.connection;
+    var self = this;
+    
   if (inputElem.message.value[0] == '/' &&
       this.options.customCommands) {
     for (var i in this.options.customCommands) {
@@ -251,11 +281,17 @@ Chat.prototype.sendInput = function(event) {
     event.preventDefault();
     return false;
   }
-  if (inputElem.submit.disabled == false) {
-    connection.send({
-      message: inputElem.message.value,
-      name: inputElem.name.value
-    });
+    if (inputElem.submit.disabled == false) {
+	var message = inputElem.message.value;
+	var name = inputElem.name.value;
+	this.readImage(inputElem.file, function(file, filename) {
+	    connection.send({
+		message: message,
+		name: name,
+		file: file,
+		filename: filename,
+	    });
+	});
     inputElem.message.value = '';
     inputElem.submit.disabled = true;
     var i = 4;
@@ -386,6 +422,13 @@ Chat.prototype.generateChat = function(data) {
     name.appendChild(document.createTextNode('Anonymous'));
   }
 
+    if (data.FilePath) {
+	var img = document.createElement('img');
+	img.setAttribute('src', '/upload/'+data.FilePath);
+	img.className = 'livechan_image_thumb';
+	message.appendChild(img);
+    }
+    
     if (data.Capcode) {
 	
 	var capcode = document.createElement('span');

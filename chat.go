@@ -7,6 +7,14 @@ import (
   "strings"
 )
 
+type InChat struct {
+	Convo string
+	Name string
+	Message string
+	File string
+	FileName string
+}
+
 /* To be stored in the DB. */
 type Chat struct {
   IpAddr string
@@ -44,23 +52,28 @@ type OutChat struct {
 
 func createChat(data []byte, conn *Connection) *Chat{
   c := new(Chat)
-  err:=json.Unmarshal(data, c)
+	inchat := new(InChat)
+  err:=json.Unmarshal(data, inchat)
   if err != nil {
     fmt.Println("error: ", err)
   }
-
-  c.Name = strings.TrimSpace(c.Name)
+	if len(inchat.File) > 0 && len(inchat.FileName) > 0 {
+		// TODO FilePreview, FileDimensions
+		fmt.Println(len(inchat.File))
+		c.FilePath = handleUpload(inchat.File, inchat.FileName);
+		c.FileName = inchat.FileName
+	}
+  c.Name = strings.TrimSpace(inchat.Name)
   if len(c.Name) == 0 {
     c.Name = "Anonymous"
   }
 
-  c.Convo = strings.TrimSpace(c.Convo)
+  c.Convo = strings.TrimSpace(inchat.Convo)
   if len(c.Convo) == 0 {
     c.Convo = "General"
   }
-
-  c.Message = strings.TrimSpace(c.Message)
-
+	
+  c.Message = strings.TrimSpace(inchat.Message)
   c.Date = time.Now().UTC()
   c.IpAddr = conn.ipAddr
   return c
@@ -81,6 +94,7 @@ func (chat *Chat) createJSON(conn *Connection) []byte{
     Date: chat.Date,
     Count: chat.Count,
     Convo: chat.Convo,
+		FilePath: chat.FilePath,
 		Capcode: chat.genCapcode(conn),
   }
   j, err := json.Marshal(outChat)
@@ -99,6 +113,7 @@ func createJSONs(chats []Chat, conn * Connection) []byte{
       Date: chat.Date,
       Count: chat.Count,
       Convo: chat.Convo,
+			FilePath: chat.FilePath,
 			Capcode: chat.genCapcode(conn),
     }
     outChats = append(outChats, outChat)
