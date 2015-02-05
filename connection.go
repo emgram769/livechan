@@ -18,7 +18,8 @@ type Connection struct {
   ws *websocket.Conn
   send chan []byte
   channelName string
-  ipAddr string
+	ipAddr string
+	user *User // user info
 }
 
 /* @brief Read until there is an error. */

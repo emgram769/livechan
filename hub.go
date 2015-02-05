@@ -31,7 +31,7 @@ func (h *Hub) run() {
         h.channels[c.channelName] = make(map[*Connection]time.Time)
       }
       h.channels[c.channelName][c] = time.Unix(0,0)
-      c.send <- createJSONs(storage.getChats(c.channelName, "General", 50))
+	    c.send <- createJSONs(storage.getChats(c.channelName, "General", 50), c)
     case c := <-h.unregister:
       if _, ok := h.channels[c.channelName][c]; ok {
         delete(h.channels[c.channelName], c)
@@ -42,7 +42,7 @@ func (h *Hub) run() {
       if (chat.canBroadcast(m.conn)) {
         for c := range h.channels[m.conn.channelName] {
           select {
-          case c.send <- chat.createJSON():
+          case c.send <- chat.createJSON(c):
           default:
             close(c.send)
             delete(h.channels[m.conn.channelName], c)

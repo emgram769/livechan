@@ -219,6 +219,18 @@ function Chat(domElem, channel, options) {
   }
 }
 
+/* @brief called when our post got mentioned
+ *
+ * @param event the event that has this mention
+ */
+Chat.prototype.Mentioned = function(event, chat) {
+    self.notify("mentioned: "+chat);
+}
+
+Chat.prototype.onNotifyShow = function () {
+
+}
+
 /* @brief Sends the message in the form.
  *
  * @param event The event causing a message to be sent.
@@ -280,6 +292,10 @@ Chat.prototype.initInput = function() {
   inputElem.message.focus();
 }
 
+Chat.prototype.notify = function(message) {
+    new Notify("livechan", { body: message , notifyShow: function() {}}).show();
+}
+
 /* @brief Binds messages to be displayed to the output.
  */
 Chat.prototype.initOutput = function() {
@@ -288,23 +304,26 @@ Chat.prototype.initOutput = function() {
   var self = this;
   connection.onmessage(function(data) {
     if( Object.prototype.toString.call(data) === '[object Array]' ) {
-      for (var i = 0; i < data.length; i++) {
-        self.insertChat(self.generateChat(data[i]), data[i].Count);
+	for (var i = 0; i < data.length; i++) {
+	    var c = self.generateChat(data[i]);
+            self.insertChat(c, data[i].Count);
       }
     } else {
-      self.insertChat(self.generateChat(data), data.Count);
+	var c = self.generateChat(data);
+	self.insertChat(c, data.Count);
     }
   });
   connection.onclose(function() {
-    connection.ws = null;
-    var getConnection = setInterval(function() {
-      console.log("Attempting to reconnect.");
-      if (initWebSocket(connection.channel, connection) !== null
-          && connection.ws !== null) {
-        console.log("Success!");
+  connection.ws = null;
+  var getConnection = setInterval(function() {
+
+    console.log("Attempting to reconnect.");
+    if (initWebSocket(connection.channel, connection) !== null
+        && connection.ws !== null) {
+	console.log("Success!");
         clearInterval(getConnection);
       }
-    }, 4000);
+  }, 4000);
   });
 }
 
@@ -367,6 +386,15 @@ Chat.prototype.generateChat = function(data) {
     name.appendChild(document.createTextNode('Anonymous'));
   }
 
+    if (data.Capcode) {
+	
+	var capcode = document.createElement('span');
+	capcode.appendChild(document.createTextNode(data.Capcode));
+	capcode.className = "livechan_chat_capcode";
+	name.appendChild(capcode);
+    }
+    
+    
   /* Note that parse does everything here.  If you want to change
    * how things are rendered modify messageRules. */
   if (data.Message) {

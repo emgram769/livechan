@@ -22,6 +22,7 @@ type Chat struct {
   FileSize string
   FileDimensions string
   Convo string
+	UserID string
 }
 
 /* To be visible to users. */
@@ -37,7 +38,8 @@ type OutChat struct {
   FilePreview string
   FileSize string
   FileDimensions string
-  Convo string
+	Convo string
+	Capcode string //for stuff like (you) and (mod)
 }
 
 func createChat(data []byte, conn *Connection) *Chat{
@@ -64,13 +66,22 @@ func createChat(data []byte, conn *Connection) *Chat{
   return c
 }
 
-func (chat *Chat) createJSON() []byte{
-  outChat := OutChat{
+func (chat *Chat) genCapcode(conn *Connection) string {
+	cap := ""
+	if Ipv4Same(conn.ipAddr, chat.IpAddr) {
+		cap = "(You)"
+	}
+	return cap
+}
+
+func (chat *Chat) createJSON(conn *Connection) []byte{
+	outChat := OutChat{
     Name: chat.Name,
     Message: chat.Message,
     Date: chat.Date,
     Count: chat.Count,
     Convo: chat.Convo,
+		Capcode: chat.genCapcode(conn),
   }
   j, err := json.Marshal(outChat)
   if err != nil {
@@ -79,7 +90,7 @@ func (chat *Chat) createJSON() []byte{
   return j
 }
 
-func createJSONs(chats []Chat) []byte{
+func createJSONs(chats []Chat, conn * Connection) []byte{
   var outChats []OutChat
   for _, chat := range chats {
     outChat := OutChat{
@@ -88,6 +99,7 @@ func createJSONs(chats []Chat) []byte{
       Date: chat.Date,
       Count: chat.Count,
       Convo: chat.Convo,
+			Capcode: chat.genCapcode(conn),
     }
     outChats = append(outChats, outChat)
   }
@@ -103,6 +115,7 @@ func (chat *Chat) canBroadcast(conn *Connection) bool{
     return false
   }
   var t = h.channels[conn.channelName][conn]
+	// limit minimum broadcast time to 4 seconds
   if time.Now().Sub(t).Seconds() < 4 {
     return false
   }
