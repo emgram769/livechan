@@ -423,10 +423,15 @@ Chat.prototype.generateChat = function(data) {
   }
 
     if (data.FilePath) {
+	var a = document.createElement('a');
+	var url = '/upload/'+data.FilePath;
+	a.setAttribute('href',url);
 	var img = document.createElement('img');
-	img.setAttribute('src', '/upload/'+data.FilePath);
+	img.setAttribute('src', url);
 	img.className = 'livechan_image_thumb';
-	message.appendChild(img);
+	a.appendChild(img);
+	message.appendChild(a);
+
     }
     
     if (data.Capcode) {

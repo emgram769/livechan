@@ -94,5 +94,8 @@ input, textarea, select {
 }
 
 .livechan_image_thumb {
-    max-width: 100px;
+    max-width: 300px;
+    max-height: 200px;
+    float: left;
+    margin: 10px;
 }
