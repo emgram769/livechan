@@ -31,8 +31,7 @@ func (s *Database) deleteConvo(channelName string, convoName string) {
 	tx.Commit()
 }
 
-func (s *Database) deleteChatForIP(channelName string, ipaddr string) {
-
+func (s *Database) deleteChatForIP(ipaddr string) {
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -43,21 +42,18 @@ func (s *Database) deleteChatForIP(channelName string, ipaddr string) {
 	rows, err := stmt.Query(&ipaddr)
   defer rows.Close()
   for rows.Next() {
-    var file_path string
-    rows.Scan(&file_path)
-		err := os.Remove(file_path)
-		if err != nil {
-			fmt.Println("cannot remove file ",file_path, err)
-		}
+		var chat Chat;
+    rows.Scan(&chat.FilePath)
+		chat.DeleteFile();
   }
 	defer stmt.Close()
-	stmt, err = tx.Prepare("DELETE FROM Chats WHERE ip = ? AND channel = (SELECT id FROM Channels WHERE name = ? LIMIT 1)")
+	stmt, err = tx.Prepare("DELETE FROM Chats WHERE ip = ?")
 	defer stmt.Close()
 	if err != nil {
 		fmt.Println("Error: could not access DB.", err)
 		return
 	}
-	_, err = stmt.Query(ipaddr, channelName)
+	_, err = stmt.Query(ipaddr)
 	tx.Commit()
 }
 

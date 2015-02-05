@@ -79,6 +79,10 @@ func createChat(data []byte, conn *Connection) *Chat{
   return c
 }
 
+func (chat *Chat) DeleteFile() {
+	os.Remove(fmt.Sprintf("upload/%s",chat.FilePath));
+}
+
 func (chat *Chat) genCapcode(conn *Connection) string {
 	cap := ""
 	if Ipv4Same(conn.ipAddr, chat.IpAddr) {
