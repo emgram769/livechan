@@ -5,6 +5,7 @@ import (
   "fmt"
   "time"
   "strings"
+	"os"
 )
 
 type InChat struct {
@@ -75,7 +76,7 @@ func createChat(data []byte, conn *Connection) *Chat{
 	
   c.Message = strings.TrimSpace(inchat.Message)
   c.Date = time.Now().UTC()
-  c.IpAddr = conn.ipAddr
+  c.IpAddr = ExtractIpv4(conn.ipAddr);
   return c
 }
 
@@ -85,7 +86,7 @@ func (chat *Chat) DeleteFile() {
 
 func (chat *Chat) genCapcode(conn *Connection) string {
 	cap := ""
-	if Ipv4Same(conn.ipAddr, chat.IpAddr) {
+	if ExtractIpv4(conn.ipAddr) == chat.IpAddr {
 		cap = "(You)"
 	}
 	return cap

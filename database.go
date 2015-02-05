@@ -5,7 +5,6 @@ import (
   _ "github.com/mattn/go-sqlite3"
   "fmt"
   "time"
-	"os"
 )
 
 type Database struct {
@@ -13,23 +12,6 @@ type Database struct {
 }
 
 var storage *Database
-
-
-func (s *Database) deleteConvo(channelName string, convoName string) {
-	tx, err := s.db.Begin()
-	if err != nil {
-		fmt.Println("Error: could not access DB.", err)
-		return
-	}
-	stmt, err := tx.Prepare("DELETE FROM Convos WHERE name = ? AND channel = (SELECT id FROM Channels WHERE name = ? LIMIT 1)")
-	defer stmt.Close()
-	if err != nil {
-		fmt.Println("Error: could not access DB.", err)
-		return
-	}
-	_, err = stmt.Query(convoName, channelName)
-	tx.Commit()
-}
 
 func (s *Database) deleteChatForIP(ipaddr string) {
 
