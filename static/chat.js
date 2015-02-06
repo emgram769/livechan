@@ -211,7 +211,7 @@ var messageRules = [
  * @param channel The channel to bind the chat to.
  */
 function Chat(domElem, channel, options) {
-    this.chatElems = buildChat(domElem, channel);
+  this.chatElems = buildChat(domElem, channel);
   this.connection = initWebSocket(channel);
   this.initOutput();
   this.initInput();
@@ -228,8 +228,8 @@ function Chat(domElem, channel, options) {
  * @param event the event that has this mention
  */
 Chat.prototype.Mentioned = function(event, chat) {
-    var self = this;
-    self.notify("mentioned: "+chat);
+  var self = this;
+  self.notify("mentioned: "+chat);
 }
 
 Chat.prototype.onNotifyShow = function () {
@@ -266,7 +266,7 @@ Chat.prototype.readImage = function (elem, callback) {
 Chat.prototype.sendInput = function(event) {
   var inputElem = this.chatElems.input;
   var connection = this.connection;
-    var self = this;
+  var self = this;
     
   if (inputElem.message.value[0] == '/' &&
       this.options.customCommands) {
