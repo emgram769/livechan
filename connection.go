@@ -3,13 +3,14 @@ package main
 import (
   "github.com/gorilla/websocket"
   "time"
+	"fmt"
 )
 
 const (
   writeWait = 10 * time.Second     // Write timeout.
   pongWait = 60 * time.Second      // Read timeout.
   pingPeriod = (pongWait * 9) / 10 // How frequently to ping the clients.
-  maxMessageSize = 512             // Maximum size of a message.
+  maxMessageSize = 1024 * 1024 * 8        // Maximum size of a message.
 )
 
 /* A Connection will maintain all data pertinent to an active
@@ -18,7 +19,8 @@ type Connection struct {
   ws *websocket.Conn
   send chan []byte
   channelName string
-  ipAddr string
+	ipAddr string
+	user *User // user info
 }
 
 /* @brief Read until there is an error. */
@@ -35,13 +37,16 @@ func (c *Connection) reader() {
     return nil
   })
   for {
-    _, d, err := c.ws.ReadMessage()
+    mtype, d, err := c.ws.ReadMessage()
     if err != nil {
-      break
-    }
-    m := Message{data:d, conn:c}
-    h.broadcast <- m
-  }
+			fmt.Println(err)
+			break
+    } else {
+			fmt.Println("got message", mtype);
+		}
+		m := Message{data:d, conn:c}
+		h.broadcast <- m
+	}
 }
 
 /* @brief Sends data to the connection.

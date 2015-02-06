@@ -9,6 +9,10 @@ A chat server written in Go.
 ```
 go get github.com/gorilla/websocket
 ```
+- Install captcha lib
+```
+go get github.com/dchest/captcha
+```
 - Install sqlite3 drivers.
 ```
 go get github.com/mattn/go-sqlite3

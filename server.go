@@ -17,7 +17,7 @@ func main() {
   http.HandleFunc("/static/", staticServer)
   http.HandleFunc("/captcha.json", captchaServer)
   http.Handle("/captcha/", captcha.Server(captcha.StdWidth, captcha.StdHeight))
-  err := http.ListenAndServe(":8080", nil)
+  err := http.ListenAndServe(":18080", nil)
   if err != nil {
     fmt.Println("Unable to serve: ", err)
   }

@@ -13,13 +13,40 @@ type Database struct {
 
 var storage *Database
 
+func (s *Database) deleteChatForIP(ipaddr string) {
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		fmt.Println("Error: could not access DB.", err)
+		return
+	}
+	stmt, err := s.db.Prepare("SELECT file_path FROM Chats WHERE ip = ?")
+	rows, err := stmt.Query(&ipaddr)
+  defer rows.Close()
+  for rows.Next() {
+		var chat Chat;
+    rows.Scan(&chat.FilePath)
+		chat.DeleteFile();
+  }
+	defer stmt.Close()
+	stmt, err = tx.Prepare("DELETE FROM Chats WHERE ip = ?")
+	defer stmt.Close()
+	if err != nil {
+		fmt.Println("Error: could not access DB.", err)
+		return
+	}
+	_, err = stmt.Query(ipaddr)
+	tx.Commit()
+}
+
+
 func (s *Database) insertChannel(channelName string) {
   tx, err := s.db.Begin()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    fmt.Println("Error: could not access DB.", err)
     return
   }
-  stmt, err := tx.Prepare("insert into Channels(name) values(?)")
+  stmt, err := tx.Prepare("INSERT INTO Channels(name) VALUES(?)")
   defer stmt.Close()
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
@@ -32,10 +59,10 @@ func (s *Database) insertChannel(channelName string) {
 func (s *Database) insertConvo(channelId int, convoName string) {
   tx, err := s.db.Begin()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    fmt.Println("Error: could not access DB.", err)
     return
   }
-  stmt, err := tx.Prepare("insert into Convos(channel, name) values(?, ?)")
+  stmt, err := tx.Prepare("INSERT INTO Convos(channel, name) VALUES(?, ?)")
   defer stmt.Close()
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
@@ -68,12 +95,12 @@ func (s *Database) insertChat(channelName string, chat Chat) {
     return
   }
   stmt, err := tx.Prepare(`
-  insert into Chats(
-    ip, name, trip, country, message, count, date, 
+  INSERT INTO Chats(
+    ip, name, trip, country, message, count, chat_date, 
     file_path, file_name, file_preview, file_size, 
     file_dimensions, convo, channel
   )
-  values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
   defer stmt.Close()
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
@@ -88,7 +115,7 @@ func (s *Database) insertChat(channelName string, chat Chat) {
 }
 
 func (s *Database) getChatConvoId(channelId int, convoName string)int {
-  stmt, err := s.db.Prepare("select id from Convos where name = ? and channel = ?")
+  stmt, err := s.db.Prepare("SELECT id FROM Convos WHERE name = ? AND channel = ?")
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return 0
@@ -103,7 +130,7 @@ func (s *Database) getChatConvoId(channelId int, convoName string)int {
 }
 
 func (s *Database) getChatChannelId(channelName string)int {
-  stmt, err := s.db.Prepare("select id from Channels where name = ?")
+  stmt, err := s.db.Prepare("SELECT id FROM Channels WHERE name = ?")
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
     return 0
@@ -119,10 +146,10 @@ func (s *Database) getChatChannelId(channelName string)int {
 
 func (s *Database) getCount(channelName string) uint64{
   stmt, err := s.db.Prepare(`
-  select MAX(count)
-  from chats
-  where channel = (
-    select id from channels where name = ?
+  SELECT MAX(count)
+  FROM chats
+  WHERE channel = (
+    SELECT id FROM channels WHERE name = ?
   )
   `)
   if err != nil {
@@ -137,12 +164,11 @@ func (s *Database) getCount(channelName string) uint64{
 func (s *Database) getChannels() []string{
   var outputChannels []string
   stmt, err := s.db.Prepare(`
-  select channels.name, MAX(chats.date)
-  from channels
-    left join chats on chats.channel = channels.id
-  group by channels.name
-  order by chats.date desc 
-  limit 20`)
+  SELECT channels.name, MAX(chats.date)
+  FROM channels
+    left join chats ON chats.channel = channels.id
+  GROUP BY channels.name
+  ORDER BY chats.date LIMIT DESC 20`)
   if err != nil {
     fmt.Println("Couldn't get channels.", err)
     return outputChannels
@@ -166,15 +192,14 @@ func (s *Database) getChannels() []string{
 func (s *Database) getConvos(channelName string) []string{
   var outputConvos []string
   stmt, err := s.db.Prepare(`
-  select convos.name, MAX(chats.date)
-  from convos
-    left join chats on chats.convo = convos.id
-  where convos.channel = (
-    select id from channels where name = ?
+  SELECT convos.name, MAX(chats.date)
+  FROM convos
+    left join chats ON chats.convo = convos.id
+  WHERE convos.channel = (
+    SELECT id FROM channels WHERE name = ?
   )
-  group by convos.name
-  order by chats.date desc 
-  limit 20`)
+  GROUP BY convos.name
+  ORDER BY chats.date DESC LIMIT 20`)
   if err != nil {
     fmt.Println("Couldn't get convos.", err)
     return outputConvos
@@ -199,16 +224,16 @@ func (s *Database) getChats(channelName string, convoName string, numChats uint6
   var outputChats []Chat
   if len(convoName) > 0 {
     stmt, err := s.db.Prepare(`
-    select * from 
-    (select ip, chats.name, trip, country, message, count, date,
+    SELECT * FROM
+    (SELECT ip, chats.name, trip, country, message, count, chat_date,
         file_path, file_name, file_preview, file_size,
         file_dimensions
-    from chats
-    join (select * from channels where channels.name = ?)
-      as filtered_channels on chats.channel=filtered_channels.id
-    join (select * from convos where convos.name = ?)
-      as filtered_convos on chats.convo=filtered_convos.id
-    order by count desc limit ?) order by count asc`)
+    FROM chats
+    JOIN (SELECT * FROM channels WHERE channels.name = ?)
+      AS filtered_channels ON chats.channel=filtered_channels.id
+    JOIN (SELECT * FROM convos WHERE convos.name = ?)
+      AS filtered_convos ON chats.convo=filtered_convos.id
+    ORDER BY COUNT DESC LIMIT ?) ORDER BY COUNT ASC`)
     if err != nil {
       fmt.Println("Couldn't get chats.", err)
       return outputChats
@@ -236,9 +261,9 @@ func (s *Database) getChats(channelName string, convoName string, numChats uint6
 
 func (s *Database) getPermissions(channelName string, userName string) uint64 {
   stmt, err := s.db.Prepare(`
-  select permissions from Owners
-  where user = (select id from users where name = ?)
-  and channel = (select id from channels where name = ?)
+  SELECT permissions FROM Owners
+  WHERE user = (SELECT id FROM users WHERE name = ?)
+  AND channel = (SELECT id FROM channels WHERE name = ?)
   `)
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
@@ -255,8 +280,8 @@ func (s *Database) getPermissions(channelName string, userName string) uint64 {
 
 func (s *Database) isBanned(channelName string, ipAddr string) bool {
   stmt, err := s.db.Prepare(`
-  select COUNT(*) from Bans
-  where ip = ? and channel = (select id from channels where name = ?)
+  SELECT COUNT(*) FROM Bans
+  WHERE ip = ? AND channel = (SELECT id FROM channels WHERE name = ?)
   `)
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
@@ -278,8 +303,8 @@ func (s *Database) isBanned(channelName string, ipAddr string) bool {
 func (s *Database) getBan(channelName string, ipAddr string) Ban {
   var ban Ban
   stmt, err := s.db.Prepare(`
-  select offense, date, expiration, ip from Bans
-  where ip = ? and channel = (select id from channels where name = ?)
+  SELECT offense, date, expiration, ip FROM Bans
+  WHERE ip = ? AND channel = (SELECT id FROM channels WHERE name = ?)
   `)
   if err != nil {
     fmt.Println("Error: could not access DB.", err);
@@ -339,7 +364,7 @@ func initDB() *sql.DB{
     country VARCHAR(255),
     message TEXT,
     count INTEGER,
-    date INTEGER,
+    chat_date INTEGER,
     file_path TEXT,
     file_name TEXT,
     file_preview TEXT,

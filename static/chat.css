@@ -86,3 +86,16 @@ input, textarea, select {
 .livechan_chat_output_count:hover {
   cursor: pointer;
 }
+
+.livechan_chat_capcode {
+    margin: 0 4px;
+    font-style: italic;
+    font-weight: lighter;
+}
+
+.livechan_image_thumb {
+    max-width: 300px;
+    max-height: 200px;
+    float: left;
+    margin: 10px;
+}
