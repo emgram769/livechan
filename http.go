@@ -92,7 +92,7 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
 func captchaServer(w http.ResponseWriter, req *http.Request) {
   if req.Method == "GET" {
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprintf(w, "{captcha: %s}", captcha.New());
+    fmt.Fprintf(w, "%s", captcha.New());
     return
   } else if req.Method == "POST" {
     if captcha.VerifyString(req.FormValue("captchaId"), req.FormValue("captchaSolution")) {

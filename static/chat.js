@@ -391,6 +391,18 @@ Chat.prototype.insertChat = function(chat, number) {
   }
 }
 
+/* @brief Shows a popup in the chat div.
+ *
+ * @param div The popup html element.
+ */
+Chat.prototype.popup = function(div) {
+  div.style.position = 'fixed';
+  div.style.width = '100%';
+  div.style.textAlign = 'center';
+  div.style.bottom = '30%';
+  this.chatElems.output.appendChild(div);
+}
+
 /* @brief Generates a chat div.
  *
  * @param data Data passed in via websocket.
