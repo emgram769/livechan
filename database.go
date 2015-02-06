@@ -15,28 +15,28 @@ var storage *Database
 
 func (s *Database) deleteChatForIP(ipaddr string) {
 
-	tx, err := s.db.Begin()
-	if err != nil {
-		fmt.Println("Error: could not access DB.", err)
-		return
-	}
-	stmt, err := s.db.Prepare("SELECT file_path FROM Chats WHERE ip = ?")
-	rows, err := stmt.Query(&ipaddr)
+  tx, err := s.db.Begin()
+  if err != nil {
+    fmt.Println("Error: could not access DB.", err)
+    return
+  }
+  stmt, err := s.db.Prepare("SELECT file_path FROM Chats WHERE ip = ?")
+  rows, err := stmt.Query(&ipaddr)
   defer rows.Close()
   for rows.Next() {
-		var chat Chat;
+    var chat Chat;
     rows.Scan(&chat.FilePath)
-		chat.DeleteFile();
+    chat.DeleteFile();
   }
-	defer stmt.Close()
-	stmt, err = tx.Prepare("DELETE FROM Chats WHERE ip = ?")
-	defer stmt.Close()
-	if err != nil {
-		fmt.Println("Error: could not access DB.", err)
-		return
-	}
-	_, err = stmt.Query(ipaddr)
-	tx.Commit()
+  defer stmt.Close()
+  stmt, err = tx.Prepare("DELETE FROM Chats WHERE ip = ?")
+  defer stmt.Close()
+  if err != nil {
+    fmt.Println("Error: could not access DB.", err)
+    return
+  }
+  _, err = stmt.Query(ipaddr)
+  tx.Commit()
 }
 
 
