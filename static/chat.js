@@ -479,4 +479,3 @@ Chat.prototype.generateChat = function(data) {
   chat.appendChild(body);
   return chat;
 }
-

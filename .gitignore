@@ -1,3 +1,6 @@
 server
 *.swp
 livechan.db
+upload
+*~
+*\#

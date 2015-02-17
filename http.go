@@ -6,6 +6,7 @@ import (
   "net/http"
   "fmt"
   "strings"
+  "log"
 )
 
 var upgrader = websocket.Upgrader{
@@ -95,13 +96,18 @@ func captchaServer(w http.ResponseWriter, req *http.Request) {
     fmt.Fprintf(w, "{captcha: %s}", captcha.New());
     return
   } else if req.Method == "POST" {
-    if captcha.VerifyString(req.FormValue("captchaId"), req.FormValue("captchaSolution")) {
+    captchaId := req.FormValue("captchaId")
+    captchaSolution := req.FormValue("captchaSolution")
+    if captcha.VerifyString(captchaId, captchaSolution) {
+      log.Println("verified captcha for", req.RemoteAddr)
     } else {
+      log.Println("failed capcha for", req.RemoteAddr)
     }
   }
 }
 
 func staticServer(w http.ResponseWriter, req *http.Request) {
-    http.ServeFile(w, req, req.URL.Path[1:])
+  path := req.URL.Path[1:]
+  http.ServeFile(w, req, path)
 }
 
