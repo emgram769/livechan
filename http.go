@@ -4,9 +4,9 @@ import (
   "github.com/dchest/captcha"
   "github.com/gorilla/websocket"
   "net/http"
-  "fmt"
   "strings"
   "log"
+  "fmt"
 )
 
 var upgrader = websocket.Upgrader{
@@ -63,6 +63,10 @@ func convoServer(w http.ResponseWriter, req *http.Request) {
   fmt.Fprintf(w, "%+v %s", storage.getConvos(req.URL.Path[8:]), req.URL.Path[8:]);
 }
 
+func handleRegistrationPage(w http.ResponseWriter, req *http.Request) {
+  http.Error(w, "No registration pages, yet!", 404)
+}
+
 func htmlServer(w http.ResponseWriter, req *http.Request) {
   channelName := req.URL.Path[1:] // Omit the leading "/"
 
@@ -82,7 +86,7 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
   }
 
   if (storage.getChatChannelId(channelName) == 0) {
-    http.Error(w, "No registration pages, yet!", 405)
+    handleRegistrationPage(w, req)
     return
   }
 

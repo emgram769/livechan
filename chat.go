@@ -6,6 +6,7 @@ import (
   "time"
   "strings"
   "os"
+  "log"
 )
 
 type InChat struct {
@@ -56,11 +57,11 @@ func createChat(data []byte, conn *Connection) *Chat{
   inchat := new(InChat)
   err:=json.Unmarshal(data, inchat)
   if err != nil {
-    fmt.Println("error: ", err)
+    log.Println("error creating chat: ", err)
   }
   if len(inchat.File) > 0 && len(inchat.FileName) > 0 {
     // TODO FilePreview, FileDimensions
-    fmt.Println(len(inchat.File))
+    log.Println("uploaded file of size", len(inchat.File))
     c.FilePath = handleUpload(inchat.File, inchat.FileName);
     c.FileName = inchat.FileName
   }
@@ -104,7 +105,7 @@ func (chat *Chat) createJSON(conn *Connection) []byte{
   }
   j, err := json.Marshal(outChat)
   if err != nil {
-    fmt.Println("error: ", err)
+    log.Println("error: ", err)
   }
   return j
 }
@@ -125,7 +126,7 @@ func createJSONs(chats []Chat, conn * Connection) []byte{
   }
   j, err := json.Marshal(outChats)
   if err != nil {
-    fmt.Println("error: ", err)
+    log.Println("error marshalling json: ", err)
   }
   return j
 }

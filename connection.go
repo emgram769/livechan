@@ -3,7 +3,6 @@ package main
 import (
   "github.com/gorilla/websocket"
   "time"
-	"fmt"
 )
 
 const (
@@ -37,12 +36,11 @@ func (c *Connection) reader() {
     return nil
   })
   for {
-    mtype, d, err := c.ws.ReadMessage()
+    _, d, err := c.ws.ReadMessage()
     if err != nil {
-			fmt.Println(err)
 			break
     } else {
-			fmt.Println("got message", mtype);
+			//log.Println("got message", mtype);
 		}
 		m := Message{data:d, conn:c}
 		h.broadcast <- m

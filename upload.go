@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"encoding/base64"
+	"log"
 )
 
 func genUploadFilename(filename string) string {
   // FIXME invalid filenames without extension
   // get time
-	fmt.Println(filename)
   timeNow := time.Now()
   // get extension
   idx := strings.LastIndex(filename, ".")
@@ -27,11 +27,11 @@ func handleUpload(filedata string, filename string) string {
 	osfname := fmt.Sprintf("upload/%s", fname)
 	data, err := base64.StdEncoding.DecodeString(filedata)
 	if err != nil {
-		fmt.Println("error converting base64 upload", err)
+		log.Println("error converting base64 upload", err)
 	}
 	err = ioutil.WriteFile(osfname, data, 0644)
 	if err != nil {
-		fmt.Println("failed to save upload");
+		log.Println("failed to save upload");
 		return ""
 	}
 
