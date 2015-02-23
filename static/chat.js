@@ -100,7 +100,7 @@ function initWebSocket(channel, connection) {
   var ws = null;
   if (window['WebSocket']) {
     try {
-      ws = new WebSocket('ws://'+location.host+'/ws/'+channel);
+      ws = new WebSocket('ws://'+location.host+':18080/ws/'+channel);
     } catch(e) {
       ws = null;
     }

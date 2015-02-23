@@ -40,7 +40,7 @@ function loadCSS(themeName, replace, callback) {
   if (callback) {
     link.addEventListener('load', callback, false);
   }
-  place = document.getElementsByTagName('link')[0];
+  var place = document.getElementsByTagName('link')[0];
   place.parentNode.insertBefore(link, place);
   saveDefault('theme', themeName);
   if (replace) {
