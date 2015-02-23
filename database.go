@@ -320,7 +320,7 @@ func (s *Database) getBan(channelName string, ipAddr string) Ban {
   ban.Date = time.Unix(0, unixTime)
   ban.Expiration = time.Unix(0, unixTimeExpiration)
   if err != nil {
-    log.Println("error getting ban", err)
+    //log.Println("error getting ban", err)
     return ban
   }
   return ban

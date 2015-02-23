@@ -18,8 +18,8 @@ type Connection struct {
   ws *websocket.Conn
   send chan []byte
   channelName string
-	ipAddr string
-	user *User // user info
+  ipAddr string
+  user *User // user info
 }
 
 /* @brief Read until there is an error. */
@@ -38,13 +38,13 @@ func (c *Connection) reader() {
   for {
     _, d, err := c.ws.ReadMessage()
     if err != nil {
-			break
+      break
     } else {
-			//log.Println("got message", mtype);
-		}
-		m := Message{data:d, conn:c}
-		h.broadcast <- m
-	}
+      //log.Println("got message", mtype);
+    }
+    m := Message{data:d, conn:c}
+    h.broadcast <- m
+  }
 }
 
 /* @brief Sends data to the connection.

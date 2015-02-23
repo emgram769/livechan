@@ -57,11 +57,11 @@ func createChat(data []byte, conn *Connection) *Chat{
   inchat := new(InChat)
   err:=json.Unmarshal(data, inchat)
   if err != nil {
-    log.Println("error creating chat: ", err)
+    log.Println(conn.ipAddr, "error creating chat: ", err)
   }
   if len(inchat.File) > 0 && len(inchat.FileName) > 0 {
     // TODO FilePreview, FileDimensions
-    log.Println("uploaded file of size", len(inchat.File))
+    log.Println(conn.ipAddr, "uploaded file of size", len(inchat.File))
     c.FilePath = handleUpload(inchat.File, inchat.FileName);
     c.FileName = inchat.FileName
   }
@@ -144,4 +144,3 @@ func (chat *Chat) canBroadcast(conn *Connection) bool{
   chat.Count = storage.getCount(conn.channelName) + 1
   return true
 }
-

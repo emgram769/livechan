@@ -1,12 +1,12 @@
 package main
 
 import (
-	"strings"
-	"time"
-	"fmt"
-	"io/ioutil"
-	"encoding/base64"
-	"log"
+  "strings"
+  "time"
+  "fmt"
+  "io/ioutil"
+  "encoding/base64"
+  "log"
 )
 
 func genUploadFilename(filename string) string {
@@ -23,17 +23,17 @@ func genUploadFilename(filename string) string {
 
 func handleUpload(filedata string, filename string) string {
 
-	fname := genUploadFilename(filename)
-	osfname := fmt.Sprintf("upload/%s", fname)
-	data, err := base64.StdEncoding.DecodeString(filedata)
-	if err != nil {
-		log.Println("error converting base64 upload", err)
-	}
-	err = ioutil.WriteFile(osfname, data, 0644)
-	if err != nil {
-		log.Println("failed to save upload");
-		return ""
-	}
+  fname := genUploadFilename(filename)
+  osfname := fmt.Sprintf("upload/%s", fname)
+  data, err := base64.StdEncoding.DecodeString(filedata)
+  if err != nil {
+    log.Println("error converting base64 upload", err)
+  }
+  err = ioutil.WriteFile(osfname, data, 0644)
+  if err != nil {
+    log.Println("failed to save upload");
+    return ""
+  }
 
-	return fname
+  return fname
 }
