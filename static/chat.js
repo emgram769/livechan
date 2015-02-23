@@ -71,8 +71,8 @@ function Connection(ws, channel) {
 Connection.prototype.send = function(obj) {
   /* Jsonify the object and send as string. */
     if (this.ws) {
-	var str = JSON.stringify(obj);
-	this.ws.send(str);
+  var str = JSON.stringify(obj);
+  this.ws.send(str);
   }
 }
 
@@ -237,24 +237,22 @@ Chat.prototype.onNotifyShow = function () {
 }
 
 Chat.prototype.readImage = function (elem, callback) {
-    var self = this;
+  var self = this;
 
-    var reader = new FileReader();
-    if (elem.files.length > 0 ) {
-	
-	var file = elem.files[0];
-	var filename = file.name;
-	var reader = new FileReader();
-	reader.onloadend = function (ev) {
-	    if ( ev.target.readyState == FileReader.DONE) {
-		callback(window.btoa(ev.target.result), filename);
-	    }
-	};
-	//reader.readAsText(file);
-	reader.readAsBinaryString(file);
-	//reader.readAsArrayBuffer(file);
+  var reader = new FileReader();
+  if (elem.files.length > 0 ) {
+  
+  var file = elem.files[0];
+  var filename = file.name;
+  var reader = new FileReader();
+  reader.onloadend = function (ev) {
+    if ( ev.target.readyState == FileReader.DONE) {
+      callback(window.btoa(ev.target.result), filename);
+    }
+  };
+  reader.readAsBinaryString(file);
     } else {
-	callback(null, null);
+  callback(null, null);
     }
 
 }
@@ -281,17 +279,18 @@ Chat.prototype.sendInput = function(event) {
     event.preventDefault();
     return false;
   }
-    if (inputElem.submit.disabled == false) {
-	var message = inputElem.message.value;
-	var name = inputElem.name.value;
-	this.readImage(inputElem.file, function(file, filename) {
-	    connection.send({
-		message: message,
-		name: name,
-		file: file,
-		filename: filename,
-	    });
-	});
+  if (inputElem.submit.disabled == false) {
+    var message = inputElem.message.value;
+    var name = inputElem.name.value;
+    self.readImage(inputElem.file, function(file, filename) {
+      inputElem.file.value = "";
+      connection.send({
+        message: message,
+        name: name,
+        file: file,
+        filename: filename,
+      });
+    });
     inputElem.message.value = '';
     inputElem.submit.disabled = true;
     var i = 4;
@@ -340,13 +339,13 @@ Chat.prototype.initOutput = function() {
   var self = this;
   connection.onmessage(function(data) {
     if( Object.prototype.toString.call(data) === '[object Array]' ) {
-	for (var i = 0; i < data.length; i++) {
-	    var c = self.generateChat(data[i]);
+  for (var i = 0; i < data.length; i++) {
+      var c = self.generateChat(data[i]);
             self.insertChat(c, data[i].Count);
       }
     } else {
-	var c = self.generateChat(data);
-	self.insertChat(c, data.Count);
+  var c = self.generateChat(data);
+  self.insertChat(c, data.Count);
     }
   });
   connection.onclose(function() {
@@ -356,7 +355,7 @@ Chat.prototype.initOutput = function() {
     console.log("Attempting to reconnect.");
     if (initWebSocket(connection.channel, connection) !== null
         && connection.ws !== null) {
-	console.log("Success!");
+  console.log("Success!");
         clearInterval(getConnection);
       }
   }, 4000);
@@ -423,23 +422,23 @@ Chat.prototype.generateChat = function(data) {
   }
 
     if (data.FilePath) {
-	var a = document.createElement('a');
-	var url = '/upload/'+data.FilePath;
-	a.setAttribute('href',url);
-	var img = document.createElement('img');
-	img.setAttribute('src', url);
-	img.className = 'livechan_image_thumb';
-	a.appendChild(img);
-	message.appendChild(a);
+  var a = document.createElement('a');
+  var url = '/upload/'+data.FilePath;
+  a.setAttribute('href',url);
+  var img = document.createElement('img');
+  img.setAttribute('src', url);
+  img.className = 'livechan_image_thumb';
+  a.appendChild(img);
+  message.appendChild(a);
 
     }
     
     if (data.Capcode) {
-	
-	var capcode = document.createElement('span');
-	capcode.appendChild(document.createTextNode(data.Capcode));
-	capcode.className = "livechan_chat_capcode";
-	name.appendChild(capcode);
+  
+  var capcode = document.createElement('span');
+  capcode.appendChild(document.createTextNode(data.Capcode));
+  capcode.className = "livechan_chat_capcode";
+  name.appendChild(capcode);
     }
     
     
