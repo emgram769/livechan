@@ -423,7 +423,7 @@ Chat.prototype.generateChat = function(data) {
 
     if (data.FilePath) {
   var a = document.createElement('a');
-  var url = '/upload/'+data.FilePath;
+  var url = '/thumbs/'+data.FilePath;
   a.setAttribute('href',url);
   var img = document.createElement('img');
   img.setAttribute('src', url);
