@@ -4,8 +4,14 @@ A chat server written in Go.
 ### Installation
 
 - Install Go.
-- Install gorilla/websocket.
 
+- Install go imagick
+```
+sudo apt-get --no-install-recommends install libmagickwand-dev
+go get github.com/gographics/imagick
+```
+
+- Install gorilla/websocket.
 ```
 go get github.com/gorilla/websocket
 ```

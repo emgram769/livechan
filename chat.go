@@ -61,9 +61,9 @@ func createChat(data []byte, conn *Connection) *Chat {
   }
   if len(inchat.File) > 0 && len(inchat.FileName) > 0 {
     // TODO FilePreview, FileDimensions
-    log.Println(conn.ipAddr, "uploaded file of size", len(inchat.File))
     c.FilePath = genUploadFilename(inchat.FileName)
     c.FileName = inchat.FileName
+    log.Println(conn.ipAddr, "uploaded file", c.FilePath)
     go handleUpload(inchat, c.FilePath);
 
   }
