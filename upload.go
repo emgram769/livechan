@@ -21,9 +21,8 @@ func genUploadFilename(filename string) string {
 }
 
 
-func handleUpload(chat *InChat) {
+func handleUpload(chat *InChat, fname string) {
 
-  fname := genUploadFilename(chat.FileName)
   osfname := fmt.Sprintf("upload/%s", fname)
   data, err := base64.StdEncoding.DecodeString(chat.File)
   if err != nil {
