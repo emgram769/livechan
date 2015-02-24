@@ -423,10 +423,13 @@ Chat.prototype.generateChat = function(data) {
 
     if (data.FilePath) {
   var a = document.createElement('a');
-  var url = '/thumbs/'+data.FilePath;
-  a.setAttribute('href',url);
+  
+  var thumb_url = '/thumbs/'+data.FilePath;
+  var src_url = '/upload/'+data.FilePath;
+  
+  a.setAttribute('href',src_url);
   var img = document.createElement('img');
-  img.setAttribute('src', url);
+  img.setAttribute('src', thumb_url);
   img.className = 'livechan_image_thumb';
   a.appendChild(img);
   message.appendChild(a);
