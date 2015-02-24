@@ -64,8 +64,7 @@ func createChat(data []byte, conn *Connection) *Chat {
     c.FilePath = genUploadFilename(inchat.FileName)
     c.FileName = inchat.FileName
     log.Println(conn.ipAddr, "uploaded file", c.FilePath)
-    go handleUpload(inchat, c.FilePath);
-
+    handleUpload(inchat, c.FilePath);
   }
   c.Name = strings.TrimSpace(inchat.Name)
   if len(c.Name) == 0 {
