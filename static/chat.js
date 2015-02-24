@@ -70,9 +70,10 @@ function Connection(ws, channel) {
 
 Connection.prototype.send = function(obj) {
   /* Jsonify the object and send as string. */
-    if (this.ws) {
-  var str = JSON.stringify(obj);
-  this.ws.send(str);
+  if (this.ws) {
+    var str = JSON.stringify(obj);
+    this.ws.send(str);
+    
   }
 }
 
@@ -241,20 +242,18 @@ Chat.prototype.readImage = function (elem, callback) {
 
   var reader = new FileReader();
   if (elem.files.length > 0 ) {
-  
-  var file = elem.files[0];
-  var filename = file.name;
-  var reader = new FileReader();
-  reader.onloadend = function (ev) {
+    var file = elem.files[0];
+    var filename = file.name;
+    var reader = new FileReader();
+    reader.onloadend = function (ev) {
     if ( ev.target.readyState == FileReader.DONE) {
       callback(window.btoa(ev.target.result), filename);
     }
   };
-  reader.readAsBinaryString(file);
-    } else {
-  callback(null, null);
-    }
-
+    reader.readAsBinaryString(file);
+  } else {
+    callback(null, null);
+  }
 }
 
 /* @brief Sends the message in the form.
@@ -266,13 +265,12 @@ Chat.prototype.sendInput = function(event) {
   var connection = this.connection;
   var self = this;
     
-  if (inputElem.message.value[0] == '/' &&
-      this.options.customCommands) {
-    for (var i in this.options.customCommands) {
-      var regexPair = this.options.customCommands[i];
+  if (inputElem.message.value[0] == '/' && self.options.customCommands) {
+    for (var i in self.options.customCommands) {
+      var regexPair = self.options.customCommands[i];
       var match = regexPair[0].exec(inputElem.message.value.slice(1));
       if (match) {
-        (regexPair[1]).call(this, match);
+        (regexPair[1]).call(self, match);
         inputElem.message.value = '';
       }
     }
@@ -283,13 +281,13 @@ Chat.prototype.sendInput = function(event) {
     var message = inputElem.message.value;
     var name = inputElem.name.value;
     self.readImage(inputElem.file, function(file, filename) {
-      inputElem.file.value = "";
       connection.send({
         message: message,
         name: name,
         file: file,
         filename: filename,
       });
+      inputElem.file.value = "";
     });
     inputElem.message.value = '';
     inputElem.submit.disabled = true;
@@ -339,26 +337,25 @@ Chat.prototype.initOutput = function() {
   var self = this;
   connection.onmessage(function(data) {
     if( Object.prototype.toString.call(data) === '[object Array]' ) {
-  for (var i = 0; i < data.length; i++) {
-      var c = self.generateChat(data[i]);
-            self.insertChat(c, data[i].Count);
+      for (var i = 0; i < data.length; i++) {
+        var c = self.generateChat(data[i]);
+        self.insertChat(c, data[i].Count);
       }
     } else {
-  var c = self.generateChat(data);
-  self.insertChat(c, data.Count);
+      var c = self.generateChat(data);
+      self.insertChat(c, data.Count);
     }
   });
   connection.onclose(function() {
   connection.ws = null;
   var getConnection = setInterval(function() {
-
     console.log("Attempting to reconnect.");
     if (initWebSocket(connection.channel, connection) !== null
         && connection.ws !== null) {
-  console.log("Success!");
+        console.log("Success!");
         clearInterval(getConnection);
       }
-  }, 4000);
+    }, 1000);
   });
 }
 
@@ -421,28 +418,26 @@ Chat.prototype.generateChat = function(data) {
     name.appendChild(document.createTextNode('Anonymous'));
   }
 
-    if (data.FilePath) {
-  var a = document.createElement('a');
+  if (data.FilePath) {
+    var a = document.createElement('a');
   
-  var thumb_url = '/thumbs/'+data.FilePath;
-  var src_url = '/upload/'+data.FilePath;
+    var thumb_url = '/thumbs/'+data.FilePath;
+    var src_url = '/upload/'+data.FilePath;
   
-  a.setAttribute('href',src_url);
-  var img = document.createElement('img');
-  img.setAttribute('src', thumb_url);
-  img.className = 'livechan_image_thumb';
-  a.appendChild(img);
-  message.appendChild(a);
-
-    }
+    a.setAttribute('href',src_url);
+    var img = document.createElement('img');
+    img.setAttribute('src', thumb_url);
+    img.className = 'livechan_image_thumb';
+    a.appendChild(img);
+    message.appendChild(a);
+  }
     
-    if (data.Capcode) {
-  
-  var capcode = document.createElement('span');
-  capcode.appendChild(document.createTextNode(data.Capcode));
-  capcode.className = "livechan_chat_capcode";
-  name.appendChild(capcode);
-    }
+  if (data.Capcode) {
+    var capcode = document.createElement('span');
+    capcode.appendChild(document.createTextNode(data.Capcode));
+    capcode.className = "livechan_chat_capcode";
+    name.appendChild(capcode);
+  }
     
     
   /* Note that parse does everything here.  If you want to change
