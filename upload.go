@@ -21,19 +21,17 @@ func genUploadFilename(filename string) string {
 }
 
 
-func handleUpload(filedata string, filename string) string {
+func handleUpload(chat *InChat) {
 
-  fname := genUploadFilename(filename)
+  fname := genUploadFilename(chat.FileName)
   osfname := fmt.Sprintf("upload/%s", fname)
-  data, err := base64.StdEncoding.DecodeString(filedata)
+  data, err := base64.StdEncoding.DecodeString(chat.File)
   if err != nil {
     log.Println("error converting base64 upload", err)
+    return
   }
   err = ioutil.WriteFile(osfname, data, 0644)
   if err != nil {
     log.Println("failed to save upload");
-    return ""
   }
-
-  return fname
 }

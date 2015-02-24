@@ -52,7 +52,7 @@ type OutChat struct {
   Capcode string //for stuff like (you) and (mod)
 }
 
-func createChat(data []byte, conn *Connection) *Chat{
+func createChat(data []byte, conn *Connection) *Chat {
   c := new(Chat)
   inchat := new(InChat)
   err:=json.Unmarshal(data, inchat)
@@ -62,8 +62,10 @@ func createChat(data []byte, conn *Connection) *Chat{
   if len(inchat.File) > 0 && len(inchat.FileName) > 0 {
     // TODO FilePreview, FileDimensions
     log.Println(conn.ipAddr, "uploaded file of size", len(inchat.File))
-    c.FilePath = handleUpload(inchat.File, inchat.FileName);
+    c.FilePath = genUploadFilename(inchat.FileName)
     c.FileName = inchat.FileName
+    go handleUpload(inchat);
+
   }
   c.Name = strings.TrimSpace(inchat.Name)
   if len(c.Name) == 0 {
