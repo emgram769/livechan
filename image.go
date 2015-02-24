@@ -21,15 +21,13 @@ func generateThumbnail(inFname, outFname string, data []byte) error {
   w := wand.GetImageWidth()
   h := wand.GetImageHeight()
   
-  var ar, thumb_w, thumb_h, scale float64
+  var thumb_w, thumb_h, scale float64
   
-  scale = 350
+  scale = 180
+  modifer := scale / float64(w)
   
-  // aspect ratio
-  ar = float64(w) / float64(h)
-  
-  thumb_w = ar * scale
-  thumb_h = ar * scale
+  thumb_w = modifer * float64(w)
+  thumb_h = modifer * float64(h)
   
   err = wand.ScaleImage(uint(thumb_w), uint(thumb_h))
   if err != nil {
