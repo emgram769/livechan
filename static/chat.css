@@ -99,3 +99,9 @@ input, textarea, select {
     float: left;
     margin: 10px;
 }
+
+#users_online {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
