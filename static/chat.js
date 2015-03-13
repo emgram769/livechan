@@ -199,7 +199,7 @@ var messageRules = [
     }
     return out;
   }],
-  [/\[spoiler\]\n?([\s\S]+)\[/spoiler\]/g, function(m) {
+  [/\[spoiler\]\n?([\s\S]+)\[\/spoiler\]/g, function(m) {
     var out;
     if ( m.length >= 2 && m[1].trim !== '') {
       out = document.createElement('span');
