@@ -36,7 +36,7 @@ function saveDefault(key, value) {
 function loadCSS(themeName, replace, callback) {
   var link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/static/theme/' + themeName + '.css';
+  link.href = 'static/theme/' + themeName + '.css';
   if (callback) {
     link.addEventListener('load', callback, false);
   }
