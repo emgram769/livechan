@@ -43,6 +43,9 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
   /* Nature of go treats this handler as a goroutine.
      Small optimization to not spawn a new one. */
   c.reader()
+  
+  // when we end we want to decrement the channel count
+  h.unregister <- c
 }
 
 func channelServer(w http.ResponseWriter, req *http.Request) {

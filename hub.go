@@ -47,6 +47,13 @@ func (h *Hub) run() {
       if _, ok := h.channels[c.channelName][c]; ok {
         delete(h.channels[c.channelName], c)
         close(c.send)
+        // anounce user part
+        var chat OutChat
+        chat.UserCount = len(h.channels[c.channelName])
+        jsondata := chat.createJSON()
+        for ch := range h.channels[c.channelName] {
+            ch.send <- jsondata
+        }
       }
     case m := <-h.broadcast:
       var chat = createChat(m.data, m.conn);
