@@ -37,15 +37,10 @@ func (h *Hub) run() {
       
       // anounce new user join
       var chat OutChat
-      chat.UserCount = storage.getCount(c.channelName)
+      chat.UserCount = len(h.channels[c.channelName])
       jsondata := chat.createJSON()
       for ch := range h.channels[c.channelName] {
-        select {
-          case ch.send <- jsondata:
-          default:
-            close(ch.send)
-            delete(h.channels[ch.channelName], ch)
-          }
+          ch.send <- jsondata
       }
       
     case c := <-h.unregister:

@@ -37,7 +37,7 @@ type Chat struct {
 
 /* To be visible to users. */
 type OutChat struct {
-  UserCount uint64
+  UserCount int
   Name string
   Trip string
   Country string
