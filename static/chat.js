@@ -199,6 +199,17 @@ var messageRules = [
     }
     return out;
   }],
+  [/\[spoiler\]\n?([\s\S]+)\[/spoiler\]/g, function(m) {
+    var out;
+    if ( m.length >= 2 && m[1].trim !== '') {
+      out = document.createElement('span');
+      out.className = 'livechan_spoiler';
+      out.TextContent = m[1];
+    } else {
+      out = document.createTextNode(m);
+    }
+    return out;
+  }],
   [/\r?\n/g, function(m) {
     return document.createElement('br');
   }],
