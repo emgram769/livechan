@@ -101,7 +101,7 @@ input, textarea, select {
 }
 
 #users_online {
-  border: 5px;
+  border-radius: 5px;
   padding: 10px;
   background: red;
   color: white;
