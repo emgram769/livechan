@@ -25,10 +25,10 @@ go get github.com/mattn/go-sqlite3
 ```
 - Get the source code.
 ```
-git clone https://github.com/emgram769/livechan.git
+git clone https://github.com/majestrate/livechan.git
 ```
 - Run the server.
 ```
 go run *.go
 ```
-- Open a browser and go to `localhost:8080`.
+- Open a browser and go to `localhost:18080`.
