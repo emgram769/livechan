@@ -46,7 +46,7 @@ function buildChat(domElem, channel) {
   submit.setAttribute('value', 'send');
 
 
-  input.appendChild(online);
+  domElem.appendChild(online);
   input.appendChild(name);
   input.appendChild(file);
   messageDiv.appendChild(message);
