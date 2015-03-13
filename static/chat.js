@@ -360,7 +360,7 @@ Chat.prototype.initOutput = function() {
       }
     } else {
       // user join / part
-      if ( data.UserCount ) {
+      if ( data.UserCount > 0 ) {
         self.updaterUserCount(data.UserCount);
       } else {
         var c = self.generateChat(data);
