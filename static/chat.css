@@ -101,9 +101,11 @@ input, textarea, select {
 }
 
 #users_online {
+  border: 5px;
+  padding: 10px;
   background: red;
   color: white;
-  opacity: 0.9;
+  opacity: 0.8;
   position: absolute;
   top: 0px;
   left: 0px;
