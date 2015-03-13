@@ -17,6 +17,9 @@ function buildChat(domElem, channel) {
   var output = document.createElement('div');
   output.className = 'livechan_chat_output';
 
+  var online = document.createElement('div');
+  output.setAttribute('id', 'users_online');
+
   var input = document.createElement('form');
   input.className = 'livechan_chat_input';
   
@@ -44,10 +47,12 @@ function buildChat(domElem, channel) {
 
   input.appendChild(name);
   input.appendChild(file);
+  input.appendChild(online);
   messageDiv.appendChild(message);
   input.appendChild(messageDiv);
   input.appendChild(submit);
-
+  
+  
   domElem.appendChild(output);
   domElem.appendChild(input);
 
@@ -223,6 +228,7 @@ var messageRules = [
  * @param channel The channel to bind the chat to.
  */
 function Chat(domElem, channel, options) {
+  this.name = channel;
   this.chatElems = buildChat(domElem, channel);
   this.connection = initWebSocket(channel);
   this.initOutput();
@@ -353,8 +359,13 @@ Chat.prototype.initOutput = function() {
         self.insertChat(c, data[i].Count);
       }
     } else {
-      var c = self.generateChat(data);
-      self.insertChat(c, data.Count);
+      // user join / part
+      if ( data.UserCount ) {
+        self.updaterUserCount(data.UserCount);
+      } else {
+        var c = self.generateChat(data);
+        self.insertChat(c, data.Count);
+      }
     }
   });
   connection.onclose(function() {
@@ -368,6 +379,13 @@ Chat.prototype.initOutput = function() {
       }
     }, 1000);
   });
+}
+
+/* @brief update the user counter for number of users online
+ */
+Chat.prototype.updaterUserCount = function(count) {
+  var elem = document.getElementById("users_online");
+  elem.textContent = "users online: "+count;
 }
 
 /* @brief Scrolls the chat to the bottom.

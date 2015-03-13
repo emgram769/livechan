@@ -37,6 +37,7 @@ type Chat struct {
 
 /* To be visible to users. */
 type OutChat struct {
+  UserCount uint64
   Name string
   Trip string
   Country string
@@ -94,6 +95,14 @@ func (chat *Chat) genCapcode(conn *Connection) string {
   return cap
 }
 
+func (chat *OutChat) createJSON() []byte {
+  j, err := json.Marshal(chat)
+  if err != nil {
+    log.Println("error: ", err)
+  }
+  return j
+}
+
 func (chat *Chat) createJSON(conn *Connection) []byte{
   outChat := OutChat{
     Name: chat.Name,
@@ -104,11 +113,7 @@ func (chat *Chat) createJSON(conn *Connection) []byte{
     FilePath: chat.FilePath,
     Capcode: chat.genCapcode(conn),
   }
-  j, err := json.Marshal(outChat)
-  if err != nil {
-    log.Println("error: ", err)
-  }
-  return j
+  return outChat.createJSON()
 }
 
 func createJSONs(chats []Chat, conn * Connection) []byte{

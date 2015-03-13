@@ -34,6 +34,20 @@ func (h *Hub) run() {
       }
       h.channels[c.channelName][c] = time.Unix(0,0)
       c.send <- createJSONs(storage.getChats(c.channelName, "General", 50), c)
+      
+      // anounce new user join
+      var chat OutChat
+      chat.UserCount = storage.getCount(c.channelName)
+      jsondata := chat.createJSON()
+      for ch := range h.channels[c.channelName] {
+        select {
+          case ch.send <- jsondata:
+          default:
+            close(ch.send)
+            delete(h.channels[ch.channelName], ch)
+          }
+      }
+      
     case c := <-h.unregister:
       if _, ok := h.channels[c.channelName][c]; ok {
         delete(h.channels[c.channelName], c)

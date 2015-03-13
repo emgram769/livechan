@@ -114,4 +114,3 @@ func staticServer(w http.ResponseWriter, req *http.Request) {
   path := req.URL.Path[1:]
   http.ServeFile(w, req, path)
 }
-
