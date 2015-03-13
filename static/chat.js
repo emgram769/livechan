@@ -360,8 +360,8 @@ Chat.prototype.initOutput = function() {
       }
     } else {
       // user join / part
-      if ( data.UserCount > 0 ) {
-        self.updaterUserCount(data.UserCount);
+      if ( data.UserCount ) {
+        self.updaterUseCount(data.UserCount);
       } else {
         var c = self.generateChat(data);
         self.insertChat(c, data.Count);
@@ -383,7 +383,7 @@ Chat.prototype.initOutput = function() {
 
 /* @brief update the user counter for number of users online
  */
-Chat.prototype.updaterUserCount = function(count) {
+Chat.prototype.updateUserCount = function(count) {
   var elem = document.getElementById("users_online");
   elem.textContent = "users online: "+count;
 }
