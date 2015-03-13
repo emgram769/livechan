@@ -355,8 +355,12 @@ Chat.prototype.initOutput = function() {
   connection.onmessage(function(data) {
     if( Object.prototype.toString.call(data) === '[object Array]' ) {
       for (var i = 0; i < data.length; i++) {
-        var c = self.generateChat(data[i]);
-        self.insertChat(c, data[i].Count);
+        if ( data[i].UserCount ) {
+          self.updateUseCount(data[i].UserCount);
+        } else {
+          var c = self.generateChat(data[i]);
+          self.insertChat(c, data[i].Count);
+        }
       }
     } else {
       // user join / part
