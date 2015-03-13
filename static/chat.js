@@ -361,7 +361,7 @@ Chat.prototype.initOutput = function() {
     } else {
       // user join / part
       if ( data.UserCount ) {
-        self.updaterUseCount(data.UserCount);
+        self.updateUseCount(data.UserCount);
       } else {
         var c = self.generateChat(data);
         self.insertChat(c, data.Count);
