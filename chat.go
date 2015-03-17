@@ -6,6 +6,7 @@ import (
   "time"
   "strings"
   "os"
+  "log"
 )
 
 type InChat struct {
@@ -36,6 +37,7 @@ type Chat struct {
 
 /* To be visible to users. */
 type OutChat struct {
+  UserCount int
   Name string
   Trip string
   Country string
@@ -51,18 +53,19 @@ type OutChat struct {
   Capcode string //for stuff like (you) and (mod)
 }
 
-func createChat(data []byte, conn *Connection) *Chat{
+func createChat(data []byte, conn *Connection) *Chat {
   c := new(Chat)
   inchat := new(InChat)
   err:=json.Unmarshal(data, inchat)
   if err != nil {
-    fmt.Println("error: ", err)
+    log.Println(conn.ipAddr, "error creating chat: ", err)
   }
   if len(inchat.File) > 0 && len(inchat.FileName) > 0 {
     // TODO FilePreview, FileDimensions
-    fmt.Println(len(inchat.File))
-    c.FilePath = handleUpload(inchat.File, inchat.FileName);
+    c.FilePath = genUploadFilename(inchat.FileName)
     c.FileName = inchat.FileName
+    log.Println(conn.ipAddr, "uploaded file", c.FilePath)
+    handleUpload(inchat, c.FilePath);
   }
   c.Name = strings.TrimSpace(inchat.Name)
   if len(c.Name) == 0 {
@@ -92,6 +95,14 @@ func (chat *Chat) genCapcode(conn *Connection) string {
   return cap
 }
 
+func (chat *OutChat) createJSON() []byte {
+  j, err := json.Marshal(chat)
+  if err != nil {
+    log.Println("error: ", err)
+  }
+  return j
+}
+
 func (chat *Chat) createJSON(conn *Connection) []byte{
   outChat := OutChat{
     Name: chat.Name,
@@ -102,11 +113,7 @@ func (chat *Chat) createJSON(conn *Connection) []byte{
     FilePath: chat.FilePath,
     Capcode: chat.genCapcode(conn),
   }
-  j, err := json.Marshal(outChat)
-  if err != nil {
-    fmt.Println("error: ", err)
-  }
-  return j
+  return outChat.createJSON()
 }
 
 func createJSONs(chats []Chat, conn * Connection) []byte{
@@ -125,7 +132,7 @@ func createJSONs(chats []Chat, conn * Connection) []byte{
   }
   j, err := json.Marshal(outChats)
   if err != nil {
-    fmt.Println("error: ", err)
+    log.Println("error marshalling json: ", err)
   }
   return j
 }
@@ -143,4 +150,3 @@ func (chat *Chat) canBroadcast(conn *Connection) bool{
   chat.Count = storage.getCount(conn.channelName) + 1
   return true
 }
-

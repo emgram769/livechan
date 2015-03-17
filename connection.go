@@ -3,7 +3,6 @@ package main
 import (
   "github.com/gorilla/websocket"
   "time"
-	"fmt"
 )
 
 const (
@@ -19,8 +18,8 @@ type Connection struct {
   ws *websocket.Conn
   send chan []byte
   channelName string
-	ipAddr string
-	user *User // user info
+  ipAddr string
+  user *User // user info
 }
 
 /* @brief Read until there is an error. */
@@ -37,16 +36,15 @@ func (c *Connection) reader() {
     return nil
   })
   for {
-    mtype, d, err := c.ws.ReadMessage()
+    _, d, err := c.ws.ReadMessage()
     if err != nil {
-			fmt.Println(err)
-			break
+      break
     } else {
-			fmt.Println("got message", mtype);
-		}
-		m := Message{data:d, conn:c}
-		h.broadcast <- m
-	}
+      //log.Println("got message", mtype);
+    }
+    m := Message{data:d, conn:c}
+    h.broadcast <- m
+  }
 }
 
 /* @brief Sends data to the connection.

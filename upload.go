@@ -1,39 +1,43 @@
 package main
 
 import (
-	"strings"
-	"time"
-	"fmt"
-	"io/ioutil"
-	"encoding/base64"
+  "strings"
+  "time"
+  "fmt"
+  "io/ioutil"
+  "encoding/base64"
+  "path/filepath"
+  "log"
 )
 
 func genUploadFilename(filename string) string {
   // FIXME invalid filenames without extension
   // get time
-	fmt.Println(filename)
   timeNow := time.Now()
   // get extension
   idx := strings.LastIndex(filename, ".")
   // concat time and file extension
   fileExt := filename[idx+1:]
-  return fmt.Sprintf("%d.%s", timeNow.UnixNano(), fileExt)
+  fname := fmt.Sprintf("%d.%s", timeNow.UnixNano(), fileExt)
+  return filepath.Clean(fname)
 }
 
-
-func handleUpload(filedata string, filename string) string {
-
-	fname := genUploadFilename(filename)
+// handle file upload
+func handleUpload(chat *InChat, fname string) {
 	osfname := fmt.Sprintf("static/uploads/%s", fname)
-	data, err := base64.StdEncoding.DecodeString(filedata)
-	if err != nil {
-		fmt.Println("error converting base64 upload", err)
-	}
-	err = ioutil.WriteFile(osfname, data, 0644)
-	if err != nil {
-		fmt.Println("failed to save upload");
-		return ""
-	}
-
-	return fname
+  thumbnail := filepath.Join("thumbs", fname)
+  data, err := base64.StdEncoding.DecodeString(chat.File)
+  if err != nil {
+    log.Println("error converting base64 upload", err)
+    return
+  }
+  err = generateThumbnail(fname, thumbnail, data)
+  if err != nil {
+    log.Println("failed to generate thumbnail", err)
+    return
+  }
+  err = ioutil.WriteFile(osfname, data, 0644)
+  if err != nil {
+    log.Println("failed to save upload", err);
+  }
 }

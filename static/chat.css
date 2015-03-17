@@ -93,6 +93,7 @@ input, textarea, select {
     font-weight: lighter;
 }
 
+<<<<<<< HEAD
 .livechan_chat_output_hide { 
   float: right;
 }
@@ -115,3 +116,21 @@ input, textarea, select {
   margin: 10px;
 }
 
+.livechan_image_thumb {
+    max-width: 300px;
+    max-height: 200px;
+    float: left;
+    margin: 10px;
+}
+
+#users_online {
+  border-radius: 5px;
+  padding: 10px;
+  background: red;
+  color: white;
+  opacity: 0.8;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 30;
+}
