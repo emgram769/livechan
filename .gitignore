@@ -1,3 +1,5 @@
 server
 *.swp
 livechan.db
+static/uploads/*
+static/thumbs/*

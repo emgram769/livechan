@@ -24,7 +24,7 @@ func genUploadFilename(filename string) string {
 func handleUpload(filedata string, filename string) string {
 
 	fname := genUploadFilename(filename)
-	osfname := fmt.Sprintf("upload/%s", fname)
+	osfname := fmt.Sprintf("static/uploads/%s", fname)
 	data, err := base64.StdEncoding.DecodeString(filedata)
 	if err != nil {
 		fmt.Println("error converting base64 upload", err)

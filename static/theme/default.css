@@ -42,3 +42,10 @@
 .livechan_chat_selected {
   background: blue;
 }
+
+.livechan_chat_output_popup {
+  background: white;
+  padding: 50 0;
+  color:red;
+}
+

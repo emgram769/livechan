@@ -69,9 +69,10 @@ window.addEventListener('load', function() {
     ]
   };
   var c = new Chat(document.getElementById('chat'), chatName, options);
+  /*
   var test = document.createElement('div');
   test.innerHTML = 'welcome to livechan';
-  c.popup(test);
+  c.popup(test); */
 });
 
 

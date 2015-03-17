@@ -395,11 +395,19 @@ Chat.prototype.insertChat = function(chat, number) {
  *
  * @param div The popup html element.
  */
-Chat.prototype.popup = function(div) {
-  div.style.position = 'fixed';
-  div.style.width = '100%';
-  div.style.textAlign = 'center';
-  div.style.bottom = '30%';
+Chat.prototype.popup = function(innerDiv) {
+  var div = document.createElement('div');
+  div.className = 'livechan_chat_output_popup';
+  var closeButton = document.createElement('a');
+  closeButton.innerHTML = 'close';
+  closeButton.className = 'livechan_chat_output_hide';
+  closeButton.addEventListener('click', function(e) {
+    div.parentNode.removeChild(div);
+    e.preventDefault();
+    return false;
+  });
+  div.appendChild(closeButton);
+  div.appendChild(innerDiv);
   this.chatElems.output.appendChild(div);
 }
 

@@ -93,9 +93,25 @@ input, textarea, select {
     font-weight: lighter;
 }
 
-.livechan_image_thumb {
-    max-width: 300px;
-    max-height: 200px;
-    float: left;
-    margin: 10px;
+.livechan_chat_output_hide { 
+  float: right;
 }
+
+.livechan_chat_output_hide:hover { 
+  cursor: pointer;
+}
+
+.livechan_chat_output_popup {
+  position: fixed;
+  width: 100%;
+  text-align: center;
+  bottom: 30%;
+}
+
+.livechan_chat_output_image_thumb {
+  max-width: 300px;
+  max-height: 200px;
+  float: left;
+  margin: 10px;
+}
+
