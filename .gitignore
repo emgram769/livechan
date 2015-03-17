@@ -3,3 +3,6 @@ server
 livechan.db
 static/uploads/*
 static/thumbs/*
+*~
+*\#
+*.bin

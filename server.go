@@ -3,7 +3,8 @@ package main
 import (
   "net/http"
   "github.com/dchest/captcha"
-  "fmt"
+  "github.com/gographics/imagick/imagick"
+  "log"
 )
 
 func main() {
@@ -17,9 +18,13 @@ func main() {
   http.HandleFunc("/static/", staticServer)
   http.HandleFunc("/captcha", captchaServer)
   http.Handle("/captcha/", captcha.Server(captcha.StdWidth, captcha.StdHeight))
+  log.Println("initialize imagick")
+  imagick.Initialize()
+  defer imagick.Terminate()
+  log.Println("livechan going up")
   err := http.ListenAndServe(":18080", nil)
   if err != nil {
-    fmt.Println("Unable to serve: ", err)
+    log.Fatal("Unable to serve: ", err)
   }
 }
 

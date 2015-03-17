@@ -4,14 +4,15 @@ import (
   "github.com/dchest/captcha"
   "github.com/gorilla/websocket"
   "net/http"
-  "fmt"
   "strings"
+  "log"
+  "fmt"
 )
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize: 1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool { return true }, // TODO: fix
+  ReadBufferSize: 1024,
+  WriteBufferSize: 1024,
+  CheckOrigin: func(r *http.Request) bool { return true }, // TODO: fix
 }
 
 func wsServer(w http.ResponseWriter, req *http.Request) {
@@ -42,6 +43,9 @@ func wsServer(w http.ResponseWriter, req *http.Request) {
   /* Nature of go treats this handler as a goroutine.
      Small optimization to not spawn a new one. */
   c.reader()
+  
+  // when we end we want to decrement the channel count
+  h.unregister <- c
 }
 
 func channelServer(w http.ResponseWriter, req *http.Request) {
@@ -60,6 +64,10 @@ func convoServer(w http.ResponseWriter, req *http.Request) {
   }
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
   fmt.Fprintf(w, "%+v %s", storage.getConvos(req.URL.Path[8:]), req.URL.Path[8:]);
+}
+
+func handleRegistrationPage(w http.ResponseWriter, req *http.Request) {
+  http.Error(w, "No registration pages, yet!", 404)
 }
 
 func htmlServer(w http.ResponseWriter, req *http.Request) {
@@ -81,7 +89,7 @@ func htmlServer(w http.ResponseWriter, req *http.Request) {
   }
 
   if (storage.getChatChannelId(channelName) == 0) {
-    http.Error(w, "No registration pages, yet!", 405)
+    handleRegistrationPage(w, req)
     return
   }
 
@@ -95,13 +103,17 @@ func captchaServer(w http.ResponseWriter, req *http.Request) {
     fmt.Fprintf(w, "%s", captcha.New());
     return
   } else if req.Method == "POST" {
-    if captcha.VerifyString(req.FormValue("captchaId"), req.FormValue("captchaSolution")) {
+    captchaId := req.FormValue("captchaId")
+    captchaSolution := req.FormValue("captchaSolution")
+    if captcha.VerifyString(captchaId, captchaSolution) {
+      log.Println("verified captcha for", req.RemoteAddr)
     } else {
+      log.Println("failed capcha for", req.RemoteAddr)
     }
   }
 }
 
 func staticServer(w http.ResponseWriter, req *http.Request) {
-    http.ServeFile(w, req, req.URL.Path[1:])
+  path := req.URL.Path[1:]
+  http.ServeFile(w, req, path)
 }
-

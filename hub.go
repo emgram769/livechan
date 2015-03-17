@@ -12,14 +12,14 @@ type Message struct {
 type Hub struct {
   channels map[string]map[*Connection]time.Time
   broadcast chan Message
-	upload chan Message
+  upload chan Message
   register chan *Connection
   unregister chan *Connection
 }
 
 var h = Hub {
-	broadcast: make(chan Message),
-	upload: make(chan Message),
+  broadcast: make(chan Message),
+  upload: make(chan Message),
   register: make(chan *Connection),
   unregister: make(chan *Connection),
   channels: make(map[string]map[*Connection]time.Time),
@@ -33,11 +33,27 @@ func (h *Hub) run() {
         h.channels[c.channelName] = make(map[*Connection]time.Time)
       }
       h.channels[c.channelName][c] = time.Unix(0,0)
-	    c.send <- createJSONs(storage.getChats(c.channelName, "General", 50), c)
+      c.send <- createJSONs(storage.getChats(c.channelName, "General", 50), c)
+      
+      // anounce new user join
+      var chat OutChat
+      chat.UserCount = len(h.channels[c.channelName])
+      jsondata := chat.createJSON()
+      for ch := range h.channels[c.channelName] {
+          ch.send <- jsondata
+      }
+      
     case c := <-h.unregister:
       if _, ok := h.channels[c.channelName][c]; ok {
         delete(h.channels[c.channelName], c)
         close(c.send)
+        // anounce user part
+        var chat OutChat
+        chat.UserCount = len(h.channels[c.channelName])
+        jsondata := chat.createJSON()
+        for ch := range h.channels[c.channelName] {
+            ch.send <- jsondata
+        }
       }
     case m := <-h.broadcast:
       var chat = createChat(m.data, m.conn);

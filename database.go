@@ -3,8 +3,8 @@ package main
 import (
   "database/sql"
   _ "github.com/mattn/go-sqlite3"
-  "fmt"
   "time"
+  "log"
 )
 
 type Database struct {
@@ -14,10 +14,10 @@ type Database struct {
 var storage *Database
 
 func (s *Database) deleteChatForIP(ipaddr string) {
-
+  log.Println("delete all chat for ", ipaddr)
   tx, err := s.db.Begin()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err)
+    log.Println("Error: could not access DB.", err)
     return
   }
   stmt, err := s.db.Prepare("SELECT file_path FROM Chats WHERE ip = ?")
@@ -32,7 +32,7 @@ func (s *Database) deleteChatForIP(ipaddr string) {
   stmt, err = tx.Prepare("DELETE FROM Chats WHERE ip = ?")
   defer stmt.Close()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err)
+    log.Println("Error: could not access DB.", err)
     return
   }
   _, err = stmt.Query(ipaddr)
@@ -43,13 +43,13 @@ func (s *Database) deleteChatForIP(ipaddr string) {
 func (s *Database) insertChannel(channelName string) {
   tx, err := s.db.Begin()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err)
+    log.Println("Error: could not access DB.", err)
     return
   }
   stmt, err := tx.Prepare("INSERT INTO Channels(name) VALUES(?)")
   defer stmt.Close()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return
   }
   _, err = stmt.Exec(channelName)
@@ -59,13 +59,13 @@ func (s *Database) insertChannel(channelName string) {
 func (s *Database) insertConvo(channelId int, convoName string) {
   tx, err := s.db.Begin()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err)
+    log.Println("Error: could not access DB.", err)
     return
   }
   stmt, err := tx.Prepare("INSERT INTO Convos(channel, name) VALUES(?, ?)")
   defer stmt.Close()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return
   }
   _, err = stmt.Exec(channelId, convoName)
@@ -79,7 +79,7 @@ func (s *Database) insertChat(channelName string, chat Chat) {
     s.insertChannel(channelName)
     channelId = s.getChatChannelId(channelName)
     if channelId == 0 {
-      fmt.Println("Error creating channel.");
+      log.Println("Error creating channel.", channelName);
       return
     }
   }
@@ -91,7 +91,7 @@ func (s *Database) insertChat(channelName string, chat Chat) {
 
   tx, err := s.db.Begin()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return
   }
   stmt, err := tx.Prepare(`
@@ -103,13 +103,13 @@ func (s *Database) insertChat(channelName string, chat Chat) {
   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
   defer stmt.Close()
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return
   }
   _, err = stmt.Exec(chat.IpAddr, chat.Name, chat.Trip, chat.Country, chat.Message, chat.Count, chat.Date.UnixNano(), chat.FilePath, chat.FileName, chat.FilePreview, chat.FileSize, chat.FileDimensions, convoId, channelId)
   tx.Commit()
   if err != nil {
-    fmt.Println("Error: could not insert into DB.", err);
+    log.Println("Error: could not insert into DB.", err);
     return
   }
 }
@@ -117,13 +117,14 @@ func (s *Database) insertChat(channelName string, chat Chat) {
 func (s *Database) getChatConvoId(channelId int, convoName string)int {
   stmt, err := s.db.Prepare("SELECT id FROM Convos WHERE name = ? AND channel = ?")
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return 0
   }
   defer stmt.Close()
   var id int
   err = stmt.QueryRow(convoName, channelId).Scan(&id)
   if err != nil {
+    log.Println("error getting convo id", err)
     return 0
   }
   return id
@@ -132,13 +133,14 @@ func (s *Database) getChatConvoId(channelId int, convoName string)int {
 func (s *Database) getChatChannelId(channelName string)int {
   stmt, err := s.db.Prepare("SELECT id FROM Channels WHERE name = ?")
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return 0
   }
   defer stmt.Close()
   var id int
   err = stmt.QueryRow(channelName).Scan(&id)
   if err != nil {
+    log.Println("error getting channel id", err)
     return 0
   }
   return id
@@ -153,7 +155,7 @@ func (s *Database) getCount(channelName string) uint64{
   )
   `)
   if err != nil {
-    fmt.Println("Couldn't get count.", err)
+    log.Println("Couldn't get count.", err)
     return 0
   }
   var count uint64
@@ -170,13 +172,13 @@ func (s *Database) getChannels() []string{
   GROUP BY channels.name
   ORDER BY chats.date LIMIT DESC 20`)
   if err != nil {
-    fmt.Println("Couldn't get channels.", err)
+    log.Println("Couldn't get channels.", err)
     return outputChannels
   }
   defer stmt.Close()
   rows, err := stmt.Query()
   if err != nil {
-    fmt.Println("Couldn't get channels.", err)
+    log.Println("Couldn't get channels.", err)
     return outputChannels
   }
   defer rows.Close()
@@ -201,13 +203,13 @@ func (s *Database) getConvos(channelName string) []string{
   GROUP BY convos.name
   ORDER BY chats.date DESC LIMIT 20`)
   if err != nil {
-    fmt.Println("Couldn't get convos.", err)
+    log.Println("Couldn't get convos.", err)
     return outputConvos
   }
   defer stmt.Close()
   rows, err := stmt.Query(channelName)
   if err != nil {
-    fmt.Println("Couldn't get convos.", err)
+    log.Println("Couldn't get convos.", err)
     return outputConvos
   }
   defer rows.Close()
@@ -235,13 +237,13 @@ func (s *Database) getChats(channelName string, convoName string, numChats uint6
       AS filtered_convos ON chats.convo=filtered_convos.id
     ORDER BY COUNT DESC LIMIT ?) ORDER BY COUNT ASC`)
     if err != nil {
-      fmt.Println("Couldn't get chats.", err)
+      log.Println("Couldn't get chats.", err)
       return outputChats
     }
     defer stmt.Close()
     rows, err := stmt.Query(channelName, convoName, numChats)
     if err != nil {
-      fmt.Println("Couldn't get chats.", err)
+      log.Println("Couldn't get chats.", err)
       return outputChats
     }
     defer rows.Close()
@@ -266,7 +268,7 @@ func (s *Database) getPermissions(channelName string, userName string) uint64 {
   AND channel = (SELECT id FROM channels WHERE name = ?)
   `)
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return 0
   }
   defer stmt.Close()
@@ -284,13 +286,14 @@ func (s *Database) isBanned(channelName string, ipAddr string) bool {
   WHERE ip = ? AND channel = (SELECT id FROM channels WHERE name = ?)
   `)
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err);
     return false
   }
   defer stmt.Close()
   var isbanned int
   err = stmt.QueryRow(ipAddr, channelName).Scan(&isbanned)
   if err != nil {
+    log.Println("failed to query database for ban", err)
     return false
   }
   if (isbanned > 0) {
@@ -307,7 +310,7 @@ func (s *Database) getBan(channelName string, ipAddr string) Ban {
   WHERE ip = ? AND channel = (SELECT id FROM channels WHERE name = ?)
   `)
   if err != nil {
-    fmt.Println("Error: could not access DB.", err);
+    log.Println("Error: could not access DB.", err)
     return ban
   }
   defer stmt.Close()
@@ -317,15 +320,17 @@ func (s *Database) getBan(channelName string, ipAddr string) Ban {
   ban.Date = time.Unix(0, unixTime)
   ban.Expiration = time.Unix(0, unixTimeExpiration)
   if err != nil {
+    //log.Println("error getting ban", err)
     return ban
   }
   return ban
 }
 
 func initDB() *sql.DB{
+  log.Println("initialize database")
   db, err := sql.Open("sqlite3", "./livechan.db");
   if err != nil {
-    fmt.Println("Unable to open db.", err);
+    log.Println("Unable to open db.", err);
   }
 
   /* Create the tables. */
@@ -339,7 +344,7 @@ func initDB() *sql.DB{
   )`
   _, err = db.Exec(createChannels)
   if err != nil {
-    fmt.Println("Unable to create Channels.", err);
+    log.Println("Unable to create Channels.", err);
   }
 
   createConvos := `CREATE TABLE IF NOT EXISTS Convos(
@@ -353,7 +358,7 @@ func initDB() *sql.DB{
   )`
   _, err = db.Exec(createConvos)
   if err != nil {
-    fmt.Println("Unable to create Convos.", err);
+    log.Println("Unable to create Convos.", err);
   }
 
   createChats := `CREATE TABLE IF NOT EXISTS Chats(
@@ -380,7 +385,7 @@ func initDB() *sql.DB{
   )`
   _, err = db.Exec(createChats)
   if err != nil {
-    fmt.Println("Unable to create Chats.", err);
+    log.Println("Unable to create Chats.", err);
   }
 
   createUsers := `CREATE TABLE IF NOT EXISTS Users(
@@ -394,7 +399,7 @@ func initDB() *sql.DB{
   )`
   _, err = db.Exec(createUsers)
   if err != nil {
-    fmt.Println("Unable to create Users.", err);
+    log.Println("Unable to create Users.", err);
   }
 
   createBans := `CREATE TABLE IF NOT EXISTS Bans(
@@ -409,7 +414,7 @@ func initDB() *sql.DB{
   )`
   _, err = db.Exec(createBans)
   if err != nil {
-    fmt.Println("Unable to create Bans.", err);
+    log.Println("Unable to create Bans.", err);
   }
 
   createOwners := `CREATE TABLE IF NOT EXISTS Owners(
@@ -424,7 +429,7 @@ func initDB() *sql.DB{
   )`
   _, err = db.Exec(createOwners)
   if err != nil {
-    fmt.Println("Unable to create Owners.", err);
+    log.Println("Unable to create Owners.", err);
   }
 
   return db

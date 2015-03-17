@@ -17,6 +17,9 @@ function buildChat(domElem, channel) {
   var output = document.createElement('div');
   output.className = 'livechan_chat_output';
 
+  var online = document.createElement('div');
+  online.setAttribute('id', 'users_online');
+
   var input = document.createElement('form');
   input.className = 'livechan_chat_input';
   
@@ -42,12 +45,14 @@ function buildChat(domElem, channel) {
   submit.setAttribute('type', 'submit');
   submit.setAttribute('value', 'send');
 
+
+  domElem.appendChild(online);
   input.appendChild(name);
   input.appendChild(file);
   messageDiv.appendChild(message);
   input.appendChild(messageDiv);
   input.appendChild(submit);
-
+  
   domElem.appendChild(output);
   domElem.appendChild(input);
 
@@ -70,9 +75,10 @@ function Connection(ws, channel) {
 
 Connection.prototype.send = function(obj) {
   /* Jsonify the object and send as string. */
-    if (this.ws) {
-	var str = JSON.stringify(obj);
-	this.ws.send(str);
+  if (this.ws) {
+    var str = JSON.stringify(obj);
+    this.ws.send(str);
+    
   }
 }
 
@@ -100,7 +106,7 @@ function initWebSocket(channel, connection) {
   var ws = null;
   if (window['WebSocket']) {
     try {
-      ws = new WebSocket('ws://'+location.host+'/ws/'+channel);
+      ws = new WebSocket('ws://'+location.host+':18080/ws/'+channel);
     } catch(e) {
       ws = null;
     }
@@ -198,6 +204,17 @@ var messageRules = [
     }
     return out;
   }],
+  [/\[spoiler\]\n?([\s\S]+)\[\/spoiler\]/g, function(m) {
+    var out;
+    if ( m.length >= 2 && m[1].trim !== '') {
+      out = document.createElement('span');
+      out.className = 'livechan_spoiler';
+      out.TextContent = m[1];
+    } else {
+      out = document.createTextNode(m);
+    }
+    return out;
+  }],
   [/\r?\n/g, function(m) {
     return document.createElement('br');
   }],
@@ -211,6 +228,7 @@ var messageRules = [
  * @param channel The channel to bind the chat to.
  */
 function Chat(domElem, channel, options) {
+  this.name = channel;
   this.chatElems = buildChat(domElem, channel);
   this.connection = initWebSocket(channel);
   this.initOutput();
@@ -237,26 +255,22 @@ Chat.prototype.onNotifyShow = function () {
 }
 
 Chat.prototype.readImage = function (elem, callback) {
-    var self = this;
+  var self = this;
 
+  var reader = new FileReader();
+  if (elem.files.length > 0 ) {
+    var file = elem.files[0];
+    var filename = file.name;
     var reader = new FileReader();
-    if (elem.files.length > 0 ) {
-	
-	var file = elem.files[0];
-	var filename = file.name;
-	var reader = new FileReader();
-	reader.onloadend = function (ev) {
-	    if ( ev.target.readyState == FileReader.DONE) {
-		callback(window.btoa(ev.target.result), filename);
-	    }
-	};
-	//reader.readAsText(file);
-	reader.readAsBinaryString(file);
-	//reader.readAsArrayBuffer(file);
-    } else {
-	callback(null, null);
+    reader.onloadend = function (ev) {
+    if ( ev.target.readyState == FileReader.DONE) {
+      callback(window.btoa(ev.target.result), filename);
     }
-
+  };
+    reader.readAsBinaryString(file);
+  } else {
+    callback(null, null);
+  }
 }
 
 /* @brief Sends the message in the form.
@@ -268,30 +282,30 @@ Chat.prototype.sendInput = function(event) {
   var connection = this.connection;
   var self = this;
     
-  if (inputElem.message.value[0] == '/' &&
-      this.options.customCommands) {
-    for (var i in this.options.customCommands) {
-      var regexPair = this.options.customCommands[i];
+  if (inputElem.message.value[0] == '/' && self.options.customCommands) {
+    for (var i in self.options.customCommands) {
+      var regexPair = self.options.customCommands[i];
       var match = regexPair[0].exec(inputElem.message.value.slice(1));
       if (match) {
-        (regexPair[1]).call(this, match);
+        (regexPair[1]).call(self, match);
         inputElem.message.value = '';
       }
     }
     event.preventDefault();
     return false;
   }
-    if (inputElem.submit.disabled == false) {
-	var message = inputElem.message.value;
-	var name = inputElem.name.value;
-	this.readImage(inputElem.file, function(file, filename) {
-	    connection.send({
-		message: message,
-		name: name,
-		file: file,
-		filename: filename,
-	    });
-	});
+  if (inputElem.submit.disabled == false) {
+    var message = inputElem.message.value;
+    var name = inputElem.name.value;
+    self.readImage(inputElem.file, function(file, filename) {
+      connection.send({
+        message: message,
+        name: name,
+        file: file,
+        filename: filename,
+      });
+      inputElem.file.value = "";
+    });
     inputElem.message.value = '';
     inputElem.submit.disabled = true;
     var i = 4;
@@ -340,27 +354,42 @@ Chat.prototype.initOutput = function() {
   var self = this;
   connection.onmessage(function(data) {
     if( Object.prototype.toString.call(data) === '[object Array]' ) {
-	for (var i = 0; i < data.length; i++) {
-	    var c = self.generateChat(data[i]);
-            self.insertChat(c, data[i].Count);
+      for (var i = 0; i < data.length; i++) {
+        if ( data[i].UserCount ) {
+          self.updateUseCount(data[i].UserCount);
+        } else {
+          var c = self.generateChat(data[i]);
+          self.insertChat(c, data[i].Count);
+        }
       }
     } else {
-	var c = self.generateChat(data);
-	self.insertChat(c, data.Count);
+      // user join / part
+      if ( data.UserCount > 0 ) {
+        self.updateUserCount(data.UserCount);
+      } else {
+        var c = self.generateChat(data);
+        self.insertChat(c, data.Count);
+      }
     }
   });
   connection.onclose(function() {
   connection.ws = null;
   var getConnection = setInterval(function() {
-
     console.log("Attempting to reconnect.");
     if (initWebSocket(connection.channel, connection) !== null
         && connection.ws !== null) {
-	console.log("Success!");
+        console.log("Success!");
         clearInterval(getConnection);
       }
-  }, 4000);
+    }, 1000);
   });
+}
+
+/* @brief update the user counter for number of users online
+ */
+Chat.prototype.updateUserCount = function(count) {
+  var elem = document.getElementById("users_online");
+  elem.textContent = "users online: "+count;
 }
 
 /* @brief Scrolls the chat to the bottom.
@@ -442,25 +471,26 @@ Chat.prototype.generateChat = function(data) {
     name.appendChild(document.createTextNode('Anonymous'));
   }
 
-    if (data.FilePath) {
-	var a = document.createElement('a');
-	var url = '/upload/'+data.FilePath;
-	a.setAttribute('href',url);
-	var img = document.createElement('img');
-	img.setAttribute('src', url);
-	img.className = 'livechan_image_thumb';
-	a.appendChild(img);
-	message.appendChild(a);
-
-    }
+  if (data.FilePath) {
+    var a = document.createElement('a');
+    a.setAttribute('target', '_blank');
+    var thumb_url = '/thumbs/'+data.FilePath;
+    var src_url = '/upload/'+data.FilePath;
+  
+    a.setAttribute('href',src_url);
+    var img = document.createElement('img');
+    img.setAttribute('src', thumb_url);
+    img.className = 'livechan_image_thumb';
+    a.appendChild(img);
+    message.appendChild(a);
+  }
     
-    if (data.Capcode) {
-	
-	var capcode = document.createElement('span');
-	capcode.appendChild(document.createTextNode(data.Capcode));
-	capcode.className = "livechan_chat_capcode";
-	name.appendChild(capcode);
-    }
+  if (data.Capcode) {
+    var capcode = document.createElement('span');
+    capcode.appendChild(document.createTextNode(data.Capcode));
+    capcode.className = "livechan_chat_capcode";
+    name.appendChild(capcode);
+  }
     
     
   /* Note that parse does everything here.  If you want to change
@@ -499,4 +529,3 @@ Chat.prototype.generateChat = function(data) {
   chat.appendChild(body);
   return chat;
 }
-
